@@ -581,6 +581,7 @@ export interface FetchBatchItemDetailsOptions extends RequestOptions {
   locale?: string[];
   /** Items per GraphQL request. */
   chunkSize?: number;
+  onProgress?: (done: number, total: number) => void;
   /**
    * When true (default), a failed chunk is logged and skipped rather than
    * rejecting the whole batch — matching the original JS behavior.
@@ -699,6 +700,7 @@ export async function fetchBatchItemDetails({
   warehouseNumber,
   locale = ["en-US"],
   chunkSize = 25,
+  onProgress,
   tolerateChunkFailures = true,
   ...request
 }: FetchBatchItemDetailsOptions): Promise<ProductDetailMap> {
@@ -706,6 +708,8 @@ export async function fetchBatchItemDetails({
 
   const headers = buildProductHeaders(clientId);
   const aggregate: ProductDetailMap = {};
+
+  let done = 0;
 
   for (const batch of chunk(itemNumbers, chunkSize)) {
     try {
@@ -723,6 +727,9 @@ export async function fetchBatchItemDetails({
     } catch (err) {
       if (!tolerateChunkFailures) throw err;
       console.error("Batch product fetch failed:", err);
+    } finally {
+      done += batch.length;
+      onProgress?.(done, itemNumbers.length);
     }
   }
 

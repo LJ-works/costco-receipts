@@ -1,4 +1,6 @@
 import { fetchReceiptsByDateRange } from "./client";
+import { showProgress } from "./progress";
+import { syncOrdersAndProducts, type SyncResult } from "./sync";
 import {
   extractWarehouses,
   loadSelectedWarehouse,
@@ -44,6 +46,37 @@ function showWarehousePicker(warehouses: WarehouseVisit[]): Promise<WarehouseVis
   });
 }
 
+async function discoverWarehouse(
+  idToken: string,
+  clientId: string,
+): Promise<WarehouseVisit | null> {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - DAYS_BACK);
+
+  const { receipts } = await fetchReceiptsByDateRange({
+    idToken,
+    clientId,
+    startDate,
+    endDate,
+    documentType: "warehouse",
+  });
+
+  const warehouses = extractWarehouses(receipts);
+  if (warehouses.length === 0) return null;
+
+  if (warehouses.length === 1) {
+    saveSelectedWarehouse(warehouses[0]);
+    return warehouses[0];
+  }
+
+  return showWarehousePicker(warehouses);
+}
+
+function formatSummary(result: SyncResult): string {
+  return `同步完成：本次新增订单 ${result.newOrderCount} 张（累计 ${result.totalOrderCount}）、去重商品 ${result.uniqueProductCount} 个、本次拉取/刷新详情 ${result.fetchedProductCount} 个`;
+}
+
 async function run(): Promise<void> {
   const idToken = localStorage.idToken;
   const clientId = localStorage.clientID;
@@ -53,33 +86,24 @@ async function run(): Promise<void> {
     return;
   }
 
-  if (loadSelectedWarehouse()) return;
-
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - DAYS_BACK);
-
   try {
-    const { receipts } = await fetchReceiptsByDateRange({
-      idToken,
-      clientId,
-      startDate,
-      endDate,
-      documentType: "warehouse",
-    });
+    const selected = loadSelectedWarehouse() ?? (await discoverWarehouse(idToken, clientId));
+    const warehouseNumber = String(selected?.id ?? 847);
+    const ui = showProgress();
 
-    const warehouses = extractWarehouses(receipts);
-    if (warehouses.length === 0) {
-      alert("过去 100 天内没有 warehouse 消费记录，无法自动识别门店。");
-      return;
+    try {
+      const result = await syncOrdersAndProducts({
+        idToken,
+        clientId,
+        warehouseNumber,
+        onProgress: ui.update,
+      });
+      ui.done(formatSummary(result));
+    } catch (err) {
+      console.error("同步失败", err);
+      ui.remove();
+      alert("同步失败，请刷新页面后重试。");
     }
-
-    if (warehouses.length === 1) {
-      saveSelectedWarehouse(warehouses[0]);
-      return;
-    }
-
-    await showWarehousePicker(warehouses);
   } catch (err) {
     console.error("获取账单失败", err);
     alert("获取账单失败，请刷新页面后重试。");

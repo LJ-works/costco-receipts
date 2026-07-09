@@ -29,5 +29,8 @@
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged"
+  },
+  "dependencies": {
+    "idb-keyval": "^6.3.0"
   }
 }
