@@ -18,8 +18,25 @@ export function extractWarehouses(
   return [...seen].map(([id, name]) => ({ id, name }));
 }
 
-export function formatWarehouseList(warehouses: WarehouseVisit[]): string {
-  if (warehouses.length === 0) return "过去 100 天内没有 warehouse 消费记录。";
-  const lines = warehouses.map((w) => `${w.name} (#${w.id})`);
-  return `过去 100 天去过的 warehouse：\n${lines.join("\n")}`;
+const STORAGE_KEY = "costco-userjs:selected-warehouse";
+
+export function loadSelectedWarehouse(
+  storage: Pick<Storage, "getItem"> = localStorage,
+): WarehouseVisit | null {
+  const raw = storage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed?.id === "number" && typeof parsed?.name === "string") return parsed;
+  } catch {
+    // 忽略损坏的存储内容
+  }
+  return null;
+}
+
+export function saveSelectedWarehouse(
+  warehouse: WarehouseVisit,
+  storage: Pick<Storage, "setItem"> = localStorage,
+): void {
+  storage.setItem(STORAGE_KEY, JSON.stringify(warehouse));
 }

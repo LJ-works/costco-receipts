@@ -1,16 +1,59 @@
 import { fetchReceiptsByDateRange } from "./client";
-import { extractWarehouses, formatWarehouseList } from "./warehouses";
+import {
+  extractWarehouses,
+  loadSelectedWarehouse,
+  saveSelectedWarehouse,
+  type WarehouseVisit,
+} from "./warehouses";
 
 const DAYS_BACK = 100;
+
+function showWarehousePicker(warehouses: WarehouseVisit[]): Promise<WarehouseVisit> {
+  return new Promise((resolve) => {
+    const overlay = document.createElement("div");
+    overlay.style.cssText =
+      "position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2147483647;" +
+      "display:flex;align-items:center;justify-content:center;padding:16px;";
+
+    const box = document.createElement("div");
+    box.style.cssText =
+      "background:#fff;border-radius:8px;max-width:320px;width:100%;" +
+      "max-height:80vh;overflow-y:auto;padding:16px;";
+
+    const title = document.createElement("div");
+    title.textContent = "选择常去的门店";
+    title.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:12px;";
+    box.appendChild(title);
+
+    for (const warehouse of warehouses) {
+      const item = document.createElement("button");
+      item.textContent = `${warehouse.name} (#${warehouse.id})`;
+      item.style.cssText =
+        "display:block;width:100%;padding:10px;margin-bottom:8px;font-size:14px;" +
+        "background:#f2f2f2;border:none;border-radius:4px;cursor:pointer;text-align:left;";
+      item.addEventListener("click", () => {
+        saveSelectedWarehouse(warehouse);
+        document.body.removeChild(overlay);
+        resolve(warehouse);
+      });
+      box.appendChild(item);
+    }
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  });
+}
 
 async function run(): Promise<void> {
   const idToken = localStorage.idToken;
   const clientId = localStorage.clientID;
 
   if (!idToken || !clientId) {
-    alert("未检测到登录信息，请登录 costco.com 或刷新页面后重试。");
+    alert("请先登录 costco.com 并打开『账户 > 订单』页面后重试。");
     return;
   }
+
+  if (loadSelectedWarehouse()) return;
 
   const endDate = new Date();
   const startDate = new Date();
@@ -24,7 +67,19 @@ async function run(): Promise<void> {
       endDate,
       documentType: "warehouse",
     });
-    alert(formatWarehouseList(extractWarehouses(receipts)));
+
+    const warehouses = extractWarehouses(receipts);
+    if (warehouses.length === 0) {
+      alert("过去 100 天内没有 warehouse 消费记录，无法自动识别门店。");
+      return;
+    }
+
+    if (warehouses.length === 1) {
+      saveSelectedWarehouse(warehouses[0]);
+      return;
+    }
+
+    await showWarehousePicker(warehouses);
   } catch (err) {
     console.error("获取账单失败", err);
     alert("获取账单失败，请刷新页面后重试。");
@@ -35,7 +90,7 @@ async function run(): Promise<void> {
 // quoid/userscripts (iOS Safari) 上都不支持，按钮方案跨扩展通用。
 function addTriggerButton(): void {
   const button = document.createElement("button");
-  button.textContent = "查询 Costco 消费门店";
+  button.textContent = "开始使用";
   button.style.cssText =
     "position:fixed;bottom:16px;right:16px;z-index:2147483647;padding:8px 14px;" +
     "background:#005dab;color:#fff;border:none;border-radius:4px;cursor:pointer;" +
