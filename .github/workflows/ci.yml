@@ -65,10 +65,11 @@ jobs:
       contents: write
 
     steps:
-      - name: Check out release tag
+      - name: Check out release commit
         uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          # draft release 尚未创建 git tag，checkout tag 会失败；release commit 即本次 push 的 SHA，内容一致且必然存在
+          ref: ${{ github.sha }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v6
