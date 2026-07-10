@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.3.0...costco-userjs-v1.3.1) (2026-07-10)
+
+
+### Bug Fixes
+
+* stop release-please creating duplicate release PRs ([17ab7f0](https://github.com/LJ-works/costco-receipts/commit/17ab7f03328c4296768ad6231f6de631648518f5))
+* stop release-please creating duplicate release PRs ([78c2d74](https://github.com/LJ-works/costco-receipts/commit/78c2d747c2403c7486f6ec0dc3f62d37dae15b23))
+
 ## [1.3.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.2.0...costco-userjs-v1.3.0) (2026-07-10)
 
 
