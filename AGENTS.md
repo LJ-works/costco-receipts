@@ -11,3 +11,8 @@ Costco 油猴脚本。TypeScript 编写，vite + vite-plugin-monkey 打包成单
 - 写的代码要有配套测试（vitest）。
 - 测试文件放在被测代码**同一文件夹**下，命名 `*.test.ts`。
 - 把可测的纯逻辑（解析、计算、格式化）从 DOM 操作里抽出来，测这部分。
+
+## Git 提交与发布
+
+- 所有提交信息必须使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式。
+- 版本和发布由 Release Please 管理；不要手动运行 `npm version`。
