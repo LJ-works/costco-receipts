@@ -1,57 +1,57 @@
-# Costco 订单助手
+# Costco Order Assistant
 
-运行在 costco.com 上的 userscript，用于同步本地订单、按商品查找历史订单，以及检查近期购买商品是否降价。所有订单和商品缓存都保存在浏览器本地，不会上传到第三方服务。
+A userscript for costco.com that synchronizes orders locally, finds historical orders by product, and checks whether recently purchased products have dropped in price. All order and product caches remain in your browser and are never uploaded to a third-party service.
 
-## 功能
+## Features
 
-### 查找订单
+### Find Orders
 
-- 按商品名称、订单商品描述或完整商品号查找订单。
-- 名称支持大小写不敏感的关键词部分匹配，例如 `dar chi` 可以匹配 `Dark Baking Chip`。
-- 结果按日期从新到旧显示。
-- 可查看订单中的全部商品、商品号、历史成交价格和折扣。
+- Find orders by product name, order item description, or exact item number.
+- Product names support case-insensitive, partial keyword matching. For example, `dar chi` matches `Dark Baking Chip`.
+- Results are sorted from newest to oldest.
+- View every item in an order, including item numbers, historical purchase prices, and discounts.
 
-### 30 天价格匹配
+### 30-Day Price Match
 
-- 检查最近 30 天内的 warehouse 销售订单。
-- 使用订单折后价格与商品最新 `listPrice` 比较。
-- 自动跳过退款订单、按重量计价商品、已停止销售/无有效价格的商品，以及没有降价的商品。
-- 按订单汇总降价商品，并展示商品号、订单原价、折扣、折后旧价格和新价格。
+- Check in-warehouse purchases from the last 30 days.
+- Compare each item's discounted purchase price with its latest `listPrice`.
+- Automatically skip refunds, weighted items, discontinued or unavailable products, and items that have not dropped in price.
+- Group price drops by order and show the item number, original purchase amount, discount, discounted old price, and new price.
 
-### 本地数据同步
+### Local Data Sync
 
-点击「开始使用」后，脚本会先增量同步 warehouse 订单和商品详情，再显示功能选择。首次使用会同步最近 3 年订单；以后只同步上次成功同步以来的订单，并刷新近期购买商品的价格。
+When you click **Start**, the script incrementally synchronizes in-warehouse orders and product details before showing the feature picker. The first run retrieves orders from the last three years. Later runs retrieve only orders since the last successful sync and refresh prices for recently purchased products.
 
-## 使用方法
+## Usage
 
-使用前请先登录 [costco.com](https://www.costco.com/)，并在 Safari/浏览器中打开 **Account > Orders & Purchases** 页面，让脚本可以读取 Costco 登录信息。
+Before using the script, sign in to [costco.com](https://www.costco.com/) and open **Account > Orders & Purchases** so the script can access your Costco session information.
 
-### 桌面浏览器
+### Desktop Browsers
 
-1. 安装 userscript 管理器，例如 [Tampermonkey](https://www.tampermonkey.net/)。
-2. 打开[最新版 userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js)，并在管理器中确认安装。
-3. 登录 costco.com，打开 **Account > Orders & Purchases**。
-4. 点击页面右下角的「开始使用」。
-5. 等待同步完成，然后选择「查找订单」或「30 天价格匹配」。
+1. Install a userscript manager such as [Tampermonkey](https://www.tampermonkey.net/).
+2. Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) and confirm the installation in your userscript manager.
+3. Sign in to costco.com and open **Account > Orders & Purchases**.
+4. Click **Start** in the bottom-right corner of the page.
+5. Wait for synchronization to finish, then choose **Find Orders** or **30-Day Price Match**.
 
-### iPhone / iPad
+### iPhone and iPad
 
-需要 iOS/iPadOS 15.1 或更高版本，并使用 Safari。
+This setup requires iOS or iPadOS 15.1 or later and Safari.
 
-1. 从 App Store 安装 [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887)。
-2. 打开 Userscripts App。新版本会自动设置默认脚本目录；如果页面提示设置目录，请点击 **Set Userscripts Directory** 并选择目录。
-3. 在系统设置的 **Safari > Extensions** 中启用 Userscripts；也可从 Safari 的 `AA`/扩展按钮管理扩展。建议允许 Userscripts **Always Allow** 访问 **All Websites**。
-4. 在 Safari 中打开[最新版 userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js)。
-5. 打开 Safari 的 Userscripts 扩展面板，点击出现的安装提示并完成安装。
-6. 登录 costco.com，打开 **Account > Orders & Purchases**。
-7. 点击页面右下角的「开始使用」，等待同步完成后选择功能。
+1. Install [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) from the App Store.
+2. Open the Userscripts app. Recent versions create a default scripts directory automatically. If prompted, tap **Set Userscripts Directory** and select a directory.
+3. Enable Userscripts under **Safari > Extensions** in the Settings app. You can also manage it from Safari's `AA` or extensions button. For the best experience, grant Userscripts **Always Allow** access to **All Websites**.
+4. Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) in Safari.
+5. Open the Userscripts extension panel in Safari, tap the installation prompt, and complete the installation.
+6. Sign in to costco.com and open **Account > Orders & Purchases**.
+7. Tap **Start** in the bottom-right corner, wait for synchronization to finish, and select a feature.
 
-也可以把下载后的 `costco-userjs.user.js` 直接保存到 Userscripts App 使用的脚本目录中。
+Alternatively, save the downloaded `costco-userjs.user.js` file directly in the scripts directory used by the Userscripts app.
 
-## 更新
+## Updating
 
-打开[最新版 userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js)并在 userscript 管理器中重新确认安装，即可更新到最新版本。
+Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) and confirm the installation again in your userscript manager to update to the latest version.
 
-## 参与开发
+## Contributing
 
-开发环境、测试、构建和发布流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, building, and release instructions.

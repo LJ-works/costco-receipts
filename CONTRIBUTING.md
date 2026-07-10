@@ -1,66 +1,66 @@
-# 参与开发
+# Contributing
 
-本项目使用 TypeScript 编写，并由 Vite 和 vite-plugin-monkey 打包成单个 `.user.js`。建议使用与 CI 一致的 Node.js 26。
+This project is written in TypeScript and bundled into a single `.user.js` file with Vite and vite-plugin-monkey. Use Node.js 26 to match CI.
 
-## 本地开发
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-首次运行 `npm run dev` 时，按浏览器提示安装开发版 userscript；之后修改代码即可本地热更新。
+The first time you run `npm run dev`, follow the browser prompt to install the development userscript. Subsequent code changes are applied through local hot reload.
 
-脚本运行在 costco.com 的实时页面上。修改 DOM 交互后，请在桌面浏览器及需要支持的 iOS Userscripts 环境中手动验证。
+The script runs against the live costco.com page. After changing DOM interactions, verify them manually in desktop browsers and the supported iOS Userscripts environment.
 
-## 构建
+## Building
 
 ```bash
 npm run build
 ```
 
-构建产物为：
+The build output is:
 
 ```text
 dist/costco-userjs.user.js
 ```
 
-userscript 头信息（例如 `@match`、`@grant`）在 `vite.config.ts` 中配置。导入的 npm 依赖会打包进最终的 `.user.js`。
+Configure userscript metadata such as `@match` and `@grant` in `vite.config.ts`. Imported npm dependencies are bundled into the final `.user.js` file.
 
-## 测试与代码质量
+## Testing and Code Quality
 
 ```bash
-npm run typecheck     # TypeScript 类型检查
-npm run lint          # oxlint
-npm run lint:fix      # 自动修复 lint 问题
-npm test              # 运行全部 vitest 测试
-npm run test:watch    # 监听模式运行测试
-npm run format        # 使用 oxfmt 格式化
-npm run format:check  # 检查格式
-npm run build         # 验证生产构建
+npm run typecheck     # Run TypeScript type checking
+npm run lint          # Run oxlint
+npm run lint:fix      # Automatically fix lint issues
+npm test              # Run all Vitest tests
+npm run test:watch    # Run tests in watch mode
+npm run format        # Format with oxfmt
+npm run format:check  # Check formatting
+npm run build         # Verify the production build
 ```
 
-新增或修改可测试逻辑时，需要添加对应的 vitest 测试：
+Add corresponding Vitest tests when adding or changing testable logic:
 
-- 测试文件与被测文件放在同一目录。
-- 测试文件命名为 `*.test.ts`。
-- 尽量把解析、计算、筛选和格式化等纯逻辑从 DOM 编排中抽离并测试。
-- IndexedDB、网络请求和 DOM 交互需要在浏览器中手动验证。
+- Place tests next to the code under test.
+- Name test files `*.test.ts`.
+- Extract pure parsing, calculation, filtering, and formatting logic from DOM orchestration and test it separately.
+- Verify IndexedDB, network requests, and DOM interactions manually in a browser.
 
-提交时，pre-commit hook 会对暂存的 JavaScript/TypeScript 文件运行 `oxlint --fix` 和 `oxfmt --write`，并执行 TypeScript 类型检查。
+The pre-commit hook runs `oxlint --fix` and `oxfmt --write` on staged JavaScript and TypeScript files and performs TypeScript type checking.
 
 ## CI
 
-GitHub Actions 会在 pull request 及推送到 `main` 时依次运行：
+GitHub Actions runs the following checks on pull requests and pushes to `main`:
 
-1. lint
-2. 类型检查
-3. 测试
-4. userscript 构建
+1. Lint
+2. Type checking
+3. Tests
+4. Userscript build
 
-## 提交与发布
+## Commits and Releases
 
-所有提交信息必须使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式，例如：
+All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/), for example:
 
 ```text
 feat: add price matching
@@ -68,11 +68,11 @@ fix: handle missing product prices
 docs: update iOS installation guide
 ```
 
-项目使用 [Release Please](https://github.com/googleapis/release-please) 管理语义化版本和发布：
+The project uses [Release Please](https://github.com/googleapis/release-please) for semantic versioning and releases:
 
-1. Conventional Commits 合并到 `main` 后，Release Please 创建或更新 release PR。
-2. Release PR 更新 `package.json`、`package-lock.json` 和 `CHANGELOG.md`。
-3. 合并 release PR 后，Release Please 创建版本 tag 和草稿 GitHub Release。
-4. CI 使用该 tag 构建并上传 `dist/costco-userjs.user.js`，然后发布 GitHub Release；发布后 release 保持不可变。
+1. After Conventional Commits are merged into `main`, Release Please creates or updates a release PR.
+2. The release PR updates `package.json`, `package-lock.json`, and `CHANGELOG.md`.
+3. Merging the release PR creates a version tag and a draft GitHub Release.
+4. CI builds and uploads `dist/costco-userjs.user.js` from that tag, then publishes the immutable GitHub Release.
 
-`fix:` 通常生成 patch 版本，`feat:` 生成 minor 版本，带 `!` 或 `BREAKING CHANGE:` 的提交生成 major 版本。不要手动运行 `npm version`。
+A `fix:` commit normally creates a patch release, `feat:` creates a minor release, and a commit containing `!` or `BREAKING CHANGE:` creates a major release. Do not run `npm version` manually.

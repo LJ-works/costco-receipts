@@ -26,7 +26,7 @@ function showWarehousePicker(warehouses: WarehouseVisit[]): Promise<WarehouseVis
       "max-height:80vh;overflow-y:auto;padding:16px;";
 
     const title = document.createElement("div");
-    title.textContent = "选择常去的门店";
+    title.textContent = "Select Your Preferred Warehouse";
     title.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:12px;";
     box.appendChild(title);
 
@@ -81,7 +81,7 @@ async function run(): Promise<void> {
   const clientId = localStorage.clientID;
 
   if (!idToken || !clientId) {
-    alert("请先登录 costco.com 并打开 “Account > Orders & Purchases” 页面后重试。");
+    alert("Please sign in to costco.com, open Account > Orders & Purchases, and try again.");
     return;
   }
 
@@ -99,9 +99,11 @@ async function run(): Promise<void> {
       });
       ui.remove();
     } catch (err) {
-      console.error("同步失败", err);
+      console.error("Synchronization failed", err);
       ui.remove();
-      alert("同步失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
+      alert(
+        "Synchronization failed. Please sign in to costco.com, open Account > Orders & Purchases, and try again.",
+      );
       return;
     }
 
@@ -109,16 +111,18 @@ async function run(): Promise<void> {
     if (feature === "find-order") await showOrderSearchUi();
     if (feature === "pricing-match") await showPriceMatchUi();
   } catch (err) {
-    console.error("获取账单或加载缓存失败", err);
-    alert("操作失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
+    console.error("Failed to retrieve orders or load the cache", err);
+    alert(
+      "The operation failed. Please sign in to costco.com, open Account > Orders & Purchases, and try again.",
+    );
   }
 }
 
-// ponytail: 纯 DOM 按钮而非 GM_registerMenuCommand / @run-at context-menu —— 两者在
-// quoid/userscripts (iOS Safari) 上都不支持，按钮方案跨扩展通用。
+// Use a plain DOM button instead of GM_registerMenuCommand or @run-at context-menu because
+// quoid/userscripts on iOS Safari supports neither; the button works across extensions.
 function addTriggerButton(): void {
   const button = document.createElement("button");
-  button.textContent = "开始使用";
+  button.textContent = "Start";
   button.style.cssText =
     "position:fixed;bottom:16px;right:16px;z-index:2147483647;padding:8px 14px;" +
     "background:#005dab;color:#fff;border:none;border-radius:4px;cursor:pointer;" +

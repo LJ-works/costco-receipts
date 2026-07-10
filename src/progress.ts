@@ -31,7 +31,7 @@ export function showProgress(): {
 
   function update(phase: string, done: number, total: number): void {
     if (total <= 0) {
-      text.textContent = `${phase}处理中…`;
+      text.textContent = `Processing ${phase.toLowerCase()}…`;
       bar.style.width = "35%";
       return;
     }
@@ -52,7 +52,7 @@ export function showProgress(): {
       track.remove();
 
       const button = document.createElement("button");
-      button.textContent = "关闭";
+      button.textContent = "Close";
       button.style.cssText =
         "margin-top:14px;width:100%;padding:10px;background:#005dab;color:#fff;" +
         "border:none;border-radius:5px;font-size:14px;cursor:pointer;";

@@ -1,18 +1,18 @@
 # AGENTS.md
 
-Costco 油猴脚本。TypeScript 编写，vite + vite-plugin-monkey 打包成单个 `.user.js`。
+Costco userscript written in TypeScript and bundled into a single `.user.js` file with Vite and vite-plugin-monkey.
 
-- 构建产物是 userscript，不是普通网页/库。userscript 头（`@match`/`@grant` 等）在 `vite.config.ts` 里配置。
-- `import` 的 npm 包会被打包进最终的 `.user.js`。
-- 脚本运行在 costco.com 的实时页面上，DOM 交互部分靠浏览器手动验证。
+- The build output is a userscript, not a regular website or library. Configure userscript metadata such as `@match` and `@grant` in `vite.config.ts`.
+- Imported npm packages are bundled into the final `.user.js` file.
+- The script runs against the live costco.com page. Verify DOM interactions manually in a browser.
 
-## 测试
+## Testing
 
-- 写的代码要有配套测试（vitest）。
-- 测试文件放在被测代码**同一文件夹**下，命名 `*.test.ts`。
-- 把可测的纯逻辑（解析、计算、格式化）从 DOM 操作里抽出来，测这部分。
+- Add corresponding Vitest tests for code changes.
+- Place test files next to the code under test and name them `*.test.ts`.
+- Extract testable pure logic, such as parsing, calculations, and formatting, from DOM operations and test it separately.
 
-## Git 提交与发布
+## Git commits and releases
 
-- 所有提交信息必须使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式。
-- 版本和发布由 Release Please 管理；不要手动运行 `npm version`。
+- All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/).
+- Release Please manages versions and releases; do not run `npm version` manually.

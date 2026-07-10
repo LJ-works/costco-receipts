@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { mergeReceiptItemDiscounts, type ReceiptItem } from "./client";
 
-// 只填测试关心的字段，其余用 Partial 补齐（不求严格）。
+// Fill only the fields relevant to the test; Partial supplies the rest without strict fixtures.
 function item(
   partial: Partial<ReceiptItem> & Pick<ReceiptItem, "itemNumber" | "amount">,
 ): ReceiptItem {
@@ -45,7 +45,7 @@ describe("mergeReceiptItemDiscounts", () => {
     expect(merged).toHaveLength(2);
 
     const strawberries = merged.find((i) => i.itemNumber === "27003");
-    expect(strawberries?.amount).toBe(4.99); // 原价不变
+    expect(strawberries?.amount).toBe(4.99); // Original price remains unchanged.
     expect(strawberries?.discount).toBe(-1);
 
     const bananas = merged.find((i) => i.itemNumber === "30669");

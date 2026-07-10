@@ -11,7 +11,7 @@ function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): st
   return names
     .filter((name): name is string => Boolean(name))
     .slice(0, 3)
-    .join("、");
+    .join(", ");
 }
 
 export async function showOrderSearchUi(): Promise<void> {
@@ -31,24 +31,24 @@ export async function showOrderSearchUi(): Promise<void> {
   topRow.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:10px;";
 
   const backButton = document.createElement("button");
-  backButton.textContent = "返回";
+  backButton.textContent = "Back";
   backButton.style.cssText =
     "display:none;padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
 
   const title = document.createElement("div");
-  title.textContent = "查找订单";
+  title.textContent = "Find Orders";
   title.style.cssText = "flex:1;font-size:18px;font-weight:bold;";
 
   const closeButton = document.createElement("button");
-  closeButton.textContent = "关闭";
+  closeButton.textContent = "Close";
   closeButton.style.cssText =
     "padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
 
   const input = document.createElement("input");
   input.type = "search";
-  input.placeholder = "输入商品名";
+  input.placeholder = "Enter a product name or item number";
   input.autocomplete = "off";
   input.style.cssText =
     "box-sizing:border-box;width:100%;padding:11px 12px;border:1px solid #cbd5e1;" +
@@ -74,7 +74,7 @@ export async function showOrderSearchUi(): Promise<void> {
   }
 
   function showSearchMode(): void {
-    title.textContent = "查找订单";
+    title.textContent = "Find Orders";
     backButton.style.display = "none";
     input.style.display = "block";
   }
@@ -83,19 +83,19 @@ export async function showOrderSearchUi(): Promise<void> {
     showSearchMode();
 
     if (orders.length === 0) {
-      showMessage("没有可搜索的订单");
+      showMessage("No orders are available to search.");
       return;
     }
 
     const query = input.value;
     if (!query.trim()) {
-      showMessage("请输入商品名");
+      showMessage("Enter a product name or item number.");
       return;
     }
 
     const matches = searchOrdersByProductText(orders, products, query);
     if (matches.length === 0) {
-      showMessage("没有找到匹配订单");
+      showMessage("No matching orders found.");
       return;
     }
 
@@ -109,7 +109,7 @@ export async function showOrderSearchUi(): Promise<void> {
         "border-radius:8px;text-align:left;cursor:pointer;color:#111;";
 
       const main = document.createElement("div");
-      main.textContent = `${match.order.transactionDate} · ${formatMoney(match.order.total)}`;
+      main.textContent = `${match.order.transactionDate} | ${formatMoney(match.order.total)}`;
       main.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:4px;";
 
       const preview = document.createElement("div");
@@ -125,7 +125,7 @@ export async function showOrderSearchUi(): Promise<void> {
   }
 
   function renderOrderDetail(order: MergedReceipt): void {
-    title.textContent = "订单详情";
+    title.textContent = "Order Details";
     backButton.style.display = "inline-block";
     input.style.display = "none";
 

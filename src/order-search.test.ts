@@ -155,6 +155,6 @@ describe("order item display helpers", () => {
     expect(fallbackOrderItemName(item("1", { itemDescription02: "Second description" }))).toBe(
       "Second description",
     );
-    expect(fallbackOrderItemName(item("42"))).toBe("商品 #42");
+    expect(fallbackOrderItemName(item("42"))).toBe("Item #42");
   });
 });
