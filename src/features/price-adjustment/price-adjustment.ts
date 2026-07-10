@@ -5,9 +5,9 @@ import type {
   ProductDetailMap,
 } from "../../common/client";
 
-export const PRICE_MATCH_DAYS = 30;
+export const PRICE_ADJUSTMENT_DAYS = 30;
 
-export interface PriceMatchItem {
+export interface PriceAdjustmentItem {
   item: MergedReceiptItem;
   product: ProductDetail;
   quantity: number;
@@ -15,9 +15,9 @@ export interface PriceMatchItem {
   newPrice: number;
 }
 
-export interface PriceMatchOrder {
+export interface PriceAdjustmentOrder {
   order: MergedReceipt;
-  items: PriceMatchItem[];
+  items: PriceAdjustmentItem[];
 }
 
 function formatLocalDate(date: Date): string {
@@ -44,21 +44,21 @@ function mergeKey(item: MergedReceiptItem): string {
   return JSON.stringify([item.itemNumber, item.amount, item.discount, item.itemUnitPriceAmount]);
 }
 
-export function findPriceMatches(
+export function findPriceAdjustments(
   orders: MergedReceipt[],
   products: ProductDetailMap,
   now: Date,
-  recentDays = PRICE_MATCH_DAYS,
-): PriceMatchOrder[] {
+  recentDays = PRICE_ADJUSTMENT_DAYS,
+): PriceAdjustmentOrder[] {
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - recentDays);
   const cutoffDate = formatLocalDate(cutoff);
-  const matches: PriceMatchOrder[] = [];
+  const adjustments: PriceAdjustmentOrder[] = [];
 
   for (const order of orders) {
     if (order.transactionDate < cutoffDate || !isWarehouseSale(order)) continue;
 
-    const mergedItems = new Map<string, PriceMatchItem>();
+    const mergedItems = new Map<string, PriceAdjustmentItem>();
 
     for (const item of order.itemArray) {
       const product = products[item.itemNumber];
@@ -78,8 +78,8 @@ export function findPriceMatches(
     }
 
     const items = [...mergedItems.values()];
-    if (items.length > 0) matches.push({ order, items });
+    if (items.length > 0) adjustments.push({ order, items });
   }
 
-  return matches.sort((a, b) => b.order.transactionDate.localeCompare(a.order.transactionDate));
+  return adjustments.sort((a, b) => b.order.transactionDate.localeCompare(a.order.transactionDate));
 }
