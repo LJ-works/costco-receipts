@@ -5,12 +5,12 @@ import { formatMoney } from "../../common/order";
 import { searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
 
 function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): string {
-  const names = match.matchedItemNumbers.map((itemNumber) => {
-    const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
-    return item ? displayOrderItemName(item, products) : products[itemNumber]?.itemActualName;
-  });
-  return names
-    .filter((name): name is string => Boolean(name))
+  return match.matchedItemNumbers
+    .map((itemNumber) => {
+      const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
+      return item ? `${displayOrderItemName(item, products)} | ${formatMoney(item.amount)}` : null;
+    })
+    .filter((preview): preview is string => preview !== null)
     .slice(0, 3)
     .join(", ");
 }
@@ -110,7 +110,7 @@ export async function showOrderSearchUi(): Promise<void> {
         "border-radius:8px;text-align:left;cursor:pointer;color:#111;";
 
       const main = document.createElement("div");
-      main.textContent = `${match.order.transactionDate} | ${formatMoney(match.order.total)}`;
+      main.textContent = match.order.transactionDate;
       main.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:4px;";
 
       const preview = document.createElement("div");
