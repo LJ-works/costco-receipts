@@ -72,7 +72,7 @@ docs: update iOS installation guide
 
 1. Conventional Commits 合并到 `main` 后，Release Please 创建或更新 release PR。
 2. Release PR 更新 `package.json`、`package-lock.json` 和 `CHANGELOG.md`。
-3. 合并 release PR 后，Release Please 创建版本 tag 和 GitHub Release。
-4. CI 使用该 tag 构建 `dist/costco-userjs.user.js`，并上传为 GitHub Release asset。
+3. 合并 release PR 后，Release Please 创建版本 tag 和草稿 GitHub Release。
+4. CI 使用该 tag 构建并上传 `dist/costco-userjs.user.js`，然后发布 GitHub Release；发布后 release 保持不可变。
 
 `fix:` 通常生成 patch 版本，`feat:` 生成 minor 版本，带 `!` 或 `BREAKING CHANGE:` 的提交生成 major 版本。不要手动运行 `npm version`。
