@@ -82,7 +82,7 @@ async function run(): Promise<void> {
   const clientId = localStorage.clientID;
 
   if (!idToken || !clientId) {
-    alert("请先登录 costco.com 并打开『账户 > 订单』页面后重试。");
+    alert("请先登录 costco.com 并打开 “Account > Orders & Purchases” 页面后重试。");
     return;
   }
 
@@ -102,11 +102,11 @@ async function run(): Promise<void> {
     } catch (err) {
       console.error("同步失败", err);
       ui.remove();
-      alert("同步失败，请刷新页面后重试。");
+      alert("同步失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
     }
   } catch (err) {
     console.error("获取账单失败", err);
-    alert("获取账单失败，请刷新页面后重试。");
+    alert("获取账单失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
   }
 }
 
