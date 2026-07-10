@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.1.0...costco-userjs-v1.2.0) (2026-07-10)
+
+
+### Features
+
+* highlight matching items in order details ([71a0688](https://github.com/LJ-works/costco-receipts/commit/71a068808eacd0c233482069d7d24a31827d3b85))
+* highlight search terms in order results ([cebfa1d](https://github.com/LJ-works/costco-receipts/commit/cebfa1d0b173309e9693ed452b5fb71799e3186c))
+* improve order search results ([3fcb627](https://github.com/LJ-works/costco-receipts/commit/3fcb6277865e0ccc420e9bfeebdd447086391ca4))
+* translate interface and documentation to English ([c836b44](https://github.com/LJ-works/costco-receipts/commit/c836b445764111dc572c1541ca6edeb41967a44c))
+* translate interface and documentation to English ([49ee16b](https://github.com/LJ-works/costco-receipts/commit/49ee16b136eec125a3d56aa24c2a50cdfccede43))
+
+
+### Bug Fixes
+
+* show item prices in search results ([e6aefdb](https://github.com/LJ-works/costco-receipts/commit/e6aefdb00d5a327019e4dd0c239bde8d73a2d058))
+
 ## [1.1.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.0.0...costco-userjs-v1.1.0) (2026-07-10)
 
 
