@@ -1,4 +1,4 @@
-export type FeatureKey = "find-order" | "pricing-match";
+export type FeatureKey = "find-order" | "price-adjustment";
 
 interface FeatureOption {
   key: FeatureKey;
@@ -7,7 +7,7 @@ interface FeatureOption {
 
 const FEATURES: FeatureOption[] = [
   { key: "find-order", label: "Find Orders" },
-  { key: "pricing-match", label: "30-Day Price Match" },
+  { key: "price-adjustment", label: "30-Day Price Adjustment" },
 ];
 
 export function showFeaturePicker(): Promise<FeatureKey> {

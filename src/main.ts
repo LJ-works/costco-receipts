@@ -8,7 +8,7 @@ import {
 } from "./common/warehouses";
 import { showFeaturePicker } from "./feature-picker";
 import { showOrderSearchUi } from "./features/order-search/order-search-ui";
-import { showPriceMatchUi } from "./features/price-match/price-match-ui";
+import { showPriceAdjustmentUi } from "./features/price-adjustment/price-adjustment-ui";
 import { syncOrdersAndProducts } from "./sync";
 
 const DAYS_BACK = 100;
@@ -109,7 +109,7 @@ async function run(): Promise<void> {
 
     const feature = await showFeaturePicker();
     if (feature === "find-order") await showOrderSearchUi();
-    if (feature === "pricing-match") await showPriceMatchUi();
+    if (feature === "price-adjustment") await showPriceAdjustmentUi();
   } catch (err) {
     console.error("Failed to retrieve orders or load the cache", err);
     alert(

@@ -69,7 +69,7 @@ GitHub Actions runs the following checks on pull requests and pushes to `main`:
 All commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/), for example:
 
 ```text
-feat: add price matching
+feat: add price adjustment
 fix: handle missing product prices
 docs: update iOS installation guide
 ```

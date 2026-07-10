@@ -11,12 +11,12 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 - Results are sorted from newest to oldest.
 - View every item in an order, including item numbers, historical purchase prices, and discounts.
 
-### 30-Day Price Match
+### 30-Day Price Adjustment
 
-- Check in-warehouse purchases from the last 30 days.
+- Find in-warehouse purchases from the last 30 days that may be eligible for a Costco price adjustment.
 - Compare each item's discounted purchase price with its latest `listPrice`.
 - Automatically skip refunds, weighted items, discontinued or unavailable products, and items that have not dropped in price.
-- Group price drops by order and show the item number, original purchase amount, discount, discounted old price, and new price.
+- Group eligible items by order and show the item number, original purchase amount, discount, discounted old price, and new price.
 
 ### Local Data Sync
 
@@ -32,7 +32,7 @@ Before using the script, sign in to [costco.com](https://www.costco.com/) and op
 2. Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) and confirm the installation in your userscript manager.
 3. Sign in to costco.com and open **Account > Orders & Purchases**.
 4. Click **Start** in the bottom-right corner of the page.
-5. Wait for synchronization to finish, then choose **Find Orders** or **30-Day Price Match**.
+5. Wait for synchronization to finish, then choose **Find Orders** or **30-Day Price Adjustment**.
 
 ### iPhone and iPad
 
