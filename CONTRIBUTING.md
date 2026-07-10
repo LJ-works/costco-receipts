@@ -78,7 +78,7 @@ The project uses [Release Please](https://github.com/googleapis/release-please) 
 
 1. After Conventional Commits are merged into `main`, Release Please creates or updates a release PR.
 2. The release PR updates `package.json`, `package-lock.json`, and `CHANGELOG.md`.
-3. Merging the release PR creates a version tag and a draft GitHub Release.
-4. CI builds and uploads `dist/costco-userjs.user.js` from that tag, then publishes the immutable GitHub Release.
+3. Merging the release PR creates a version tag and a GitHub Release.
+4. CI builds `dist/costco-userjs.user.js` from that release commit and uploads it as a Release asset.
 
 A `fix:` commit normally creates a patch release, `feat:` creates a minor release, and a commit containing `!` or `BREAKING CHANGE:` creates a major release. Do not run `npm version` manually.
