@@ -82,7 +82,25 @@ describe("searchOrdersByProductText", () => {
     expect(searchOrdersByProductText([receipt], {}, "milk")).toHaveLength(1);
   });
 
-  it("matches name substrings case-insensitively", () => {
+  it("matches every keyword as a partial match, regardless of order", () => {
+    const receipt = order("2026-07-01", [item("1")]);
+    const productMap = products({ "1": "Dark Baking Chip" });
+
+    expect(searchOrdersByProductText([receipt], productMap, "dark chip")).toHaveLength(1);
+    expect(searchOrdersByProductText([receipt], productMap, "dar chi")).toHaveLength(1);
+    expect(searchOrdersByProductText([receipt], productMap, "chip dark")).toHaveLength(1);
+  });
+
+  it("requires every keyword to match the same product", () => {
+    const receipt = order("2026-07-01", [
+      item("1", { itemDescription01: "DARK CHOCOLATE" }),
+      item("2", { itemDescription01: "POTATO CHIPS" }),
+    ]);
+
+    expect(searchOrdersByProductText([receipt], {}, "dark chip")).toEqual([]);
+  });
+
+  it("matches name keywords case-insensitively", () => {
     const receipt = order("2026-07-01", [item("1")]);
 
     expect(

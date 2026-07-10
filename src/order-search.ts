@@ -37,6 +37,7 @@ export function searchOrdersByProductText(
 ): OrderSearchMatch[] {
   const normalizedQuery = normalizeText(query);
   if (!normalizedQuery) return [];
+  const keywords = normalizedQuery.split(/\s+/);
 
   const matches: OrderSearchMatch[] = [];
 
@@ -45,10 +46,11 @@ export function searchOrdersByProductText(
 
     for (const item of order.itemArray) {
       const idMatched = normalizeText(item.itemNumber) === normalizedQuery;
-      const nameMatched = searchableTexts(item, products).some((text) =>
-        normalizeText(text).includes(normalizedQuery),
+      const normalizedTexts = searchableTexts(item, products).map(normalizeText);
+      const keywordsMatched = keywords.every((keyword) =>
+        normalizedTexts.some((text) => text.includes(keyword)),
       );
-      if (idMatched || nameMatched) matchedItemNumbers.add(item.itemNumber);
+      if (idMatched || keywordsMatched) matchedItemNumbers.add(item.itemNumber);
     }
 
     if (matchedItemNumbers.size > 0) {
