@@ -1,4 +1,4 @@
-import type { MergedReceipt, ProductDetailMap } from "../../common/client";
+import type { ProductDetailMap } from "../../common/client";
 import { loadAllOrders, loadAllProducts } from "../../common/db";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
@@ -147,19 +147,21 @@ export async function showOrderSearchUi(): Promise<void> {
       }
 
       item.append(main, preview);
-      item.addEventListener("click", () => renderOrderDetail(match.order));
+      item.addEventListener("click", () => renderOrderDetail(match));
       list.appendChild(item);
     }
 
     content.replaceChildren(list);
   }
 
-  function renderOrderDetail(order: MergedReceipt): void {
+  function renderOrderDetail(match: OrderSearchMatch): void {
     title.textContent = "Order Details";
     backButton.style.display = "inline-block";
     input.style.display = "none";
 
-    content.replaceChildren(createOrderDetail(order, products));
+    content.replaceChildren(
+      createOrderDetail(match.order, products, new Set(match.matchedItemNumbers)),
+    );
   }
 
   closeButton.addEventListener("click", close);

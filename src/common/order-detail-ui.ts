@@ -17,7 +17,11 @@ function itemQuantityText(item: MergedReceiptItem): string | null {
   return `Quantity: ${item.unit}`;
 }
 
-export function createOrderDetail(order: MergedReceipt, products: ProductDetailMap): HTMLElement {
+export function createOrderDetail(
+  order: MergedReceipt,
+  products: ProductDetailMap,
+  highlightedItemNumbers: ReadonlySet<string> = new Set(),
+): HTMLElement {
   const container = document.createElement("div");
   container.style.cssText = "display:flex;flex-direction:column;gap:12px;";
 
@@ -38,7 +42,9 @@ export function createOrderDetail(order: MergedReceipt, products: ProductDetailM
 
   for (const orderItem of order.itemArray) {
     const row = document.createElement("div");
-    row.style.cssText = "padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;";
+    row.style.cssText = highlightedItemNumbers.has(orderItem.itemNumber)
+      ? "padding:12px;border:1px solid #facc15;border-radius:8px;background:#fef9c3;"
+      : "padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;";
 
     const name = document.createElement("div");
     name.textContent = displayOrderItemName(orderItem, products);
