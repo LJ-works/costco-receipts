@@ -2,17 +2,42 @@ import type { MergedReceipt, ProductDetailMap } from "../../common/client";
 import { loadAllOrders, loadAllProducts } from "../../common/db";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
-import { searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
+import {
+  searchOrdersByProductText,
+  splitHighlightSegments,
+  type OrderSearchMatch,
+} from "./order-search";
 
-function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): string {
+interface MatchedPreviewItem {
+  name: string;
+  amount: number;
+}
+
+function matchedPreviewItems(
+  match: OrderSearchMatch,
+  products: ProductDetailMap,
+): MatchedPreviewItem[] {
   return match.matchedItemNumbers
     .map((itemNumber) => {
       const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
-      return item ? `${displayOrderItemName(item, products)} | ${formatMoney(item.amount)}` : null;
+      return item ? { name: displayOrderItemName(item, products), amount: item.amount } : null;
     })
-    .filter((preview): preview is string => preview !== null)
-    .slice(0, 3)
-    .join(", ");
+    .filter((item): item is MatchedPreviewItem => item !== null)
+    .slice(0, 3);
+}
+
+function appendHighlightedText(element: HTMLElement, text: string, query: string): void {
+  for (const segment of splitHighlightSegments(text, query)) {
+    if (!segment.highlighted) {
+      element.appendChild(document.createTextNode(segment.text));
+      continue;
+    }
+
+    const highlight = document.createElement("mark");
+    highlight.textContent = segment.text;
+    highlight.style.cssText = "background:#fef08a;color:inherit;padding:0 1px;";
+    element.appendChild(highlight);
+  }
 }
 
 export async function showOrderSearchUi(): Promise<void> {
@@ -114,8 +139,12 @@ export async function showOrderSearchUi(): Promise<void> {
       main.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:4px;";
 
       const preview = document.createElement("div");
-      preview.textContent = matchedPreview(match, products);
       preview.style.cssText = "font-size:13px;color:#6b7280;line-height:1.4;";
+      for (const [index, matchedItem] of matchedPreviewItems(match, products).entries()) {
+        if (index > 0) preview.appendChild(document.createTextNode(", "));
+        appendHighlightedText(preview, matchedItem.name, query);
+        preview.appendChild(document.createTextNode(` | ${formatMoney(matchedItem.amount)}`));
+      }
 
       item.append(main, preview);
       item.addEventListener("click", () => renderOrderDetail(match.order));
