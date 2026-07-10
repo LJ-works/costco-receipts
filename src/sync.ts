@@ -13,7 +13,7 @@ import {
   saveProducts,
 } from "./db";
 
-const INITIAL_SYNC_DAYS = 100;
+const INITIAL_SYNC_YEARS = 3;
 
 /** 需要拉取的商品 = 未缓存的全部 ∪ 近 recentDays 天购买过的（无论是否已缓存，用于刷新价格）。 */
 export function selectProductsToFetch(
@@ -64,8 +64,7 @@ export async function syncOrdersAndProducts({
   const lastRetrieve = loadLastRetrieve();
   const startDate = lastRetrieve ?? new Date(now);
   if (!lastRetrieve) {
-    // TODO: 改 3 年。现在 100 天是为少发请求。
-    startDate.setDate(startDate.getDate() - INITIAL_SYNC_DAYS);
+    startDate.setFullYear(startDate.getFullYear() - INITIAL_SYNC_YEARS);
   }
 
   onProgress?.("订单", 0, 0);
