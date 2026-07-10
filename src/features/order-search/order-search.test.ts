@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "../../common/client";
-import { searchOrdersByProductText } from "./order-search";
+import { searchOrdersByProductText, splitHighlightSegments } from "./order-search";
 
 function item(
   itemNumber: string,
@@ -133,5 +133,31 @@ describe("searchOrdersByProductText", () => {
     expect(
       searchOrdersByProductText([oldOrder, newOrder], {}, "apple").map(({ order }) => order),
     ).toEqual([newOrder, oldOrder]);
+  });
+});
+
+describe("splitHighlightSegments", () => {
+  it("highlights each partial keyword while preserving original text", () => {
+    expect(splitHighlightSegments("Dark Baking Chips", "dark chi")).toEqual([
+      { text: "Dark", highlighted: true },
+      { text: " Baking ", highlighted: false },
+      { text: "Chi", highlighted: true },
+      { text: "ps", highlighted: false },
+    ]);
+  });
+
+  it("highlights every occurrence case-insensitively", () => {
+    expect(splitHighlightSegments("Chip chip", "chi")).toEqual([
+      { text: "Chi", highlighted: true },
+      { text: "p ", highlighted: false },
+      { text: "chi", highlighted: true },
+      { text: "p", highlighted: false },
+    ]);
+  });
+
+  it("returns one unhighlighted segment when there is no matching keyword", () => {
+    expect(splitHighlightSegments("Dark Baking Chips", "milk")).toEqual([
+      { text: "Dark Baking Chips", highlighted: false },
+    ]);
   });
 });

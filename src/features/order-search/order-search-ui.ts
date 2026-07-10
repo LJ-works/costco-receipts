@@ -1,18 +1,43 @@
-import type { MergedReceipt, ProductDetailMap } from "../../common/client";
+import type { ProductDetailMap } from "../../common/client";
 import { loadAllOrders, loadAllProducts } from "../../common/db";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
-import { searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
+import {
+  searchOrdersByProductText,
+  splitHighlightSegments,
+  type OrderSearchMatch,
+} from "./order-search";
 
-function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): string {
-  const names = match.matchedItemNumbers.map((itemNumber) => {
-    const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
-    return item ? displayOrderItemName(item, products) : products[itemNumber]?.itemActualName;
-  });
-  return names
-    .filter((name): name is string => Boolean(name))
-    .slice(0, 3)
-    .join(", ");
+interface MatchedPreviewItem {
+  name: string;
+  amount: number;
+}
+
+function matchedPreviewItems(
+  match: OrderSearchMatch,
+  products: ProductDetailMap,
+): MatchedPreviewItem[] {
+  return match.matchedItemNumbers
+    .map((itemNumber) => {
+      const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
+      return item ? { name: displayOrderItemName(item, products), amount: item.amount } : null;
+    })
+    .filter((item): item is MatchedPreviewItem => item !== null)
+    .slice(0, 3);
+}
+
+function appendHighlightedText(element: HTMLElement, text: string, query: string): void {
+  for (const segment of splitHighlightSegments(text, query)) {
+    if (!segment.highlighted) {
+      element.appendChild(document.createTextNode(segment.text));
+      continue;
+    }
+
+    const highlight = document.createElement("mark");
+    highlight.textContent = segment.text;
+    highlight.style.cssText = "background:#fef08a;color:inherit;padding:0 1px;";
+    element.appendChild(highlight);
+  }
 }
 
 export async function showOrderSearchUi(): Promise<void> {
@@ -110,27 +135,33 @@ export async function showOrderSearchUi(): Promise<void> {
         "border-radius:8px;text-align:left;cursor:pointer;color:#111;";
 
       const main = document.createElement("div");
-      main.textContent = `${match.order.transactionDate} | ${formatMoney(match.order.total)}`;
+      main.textContent = match.order.transactionDate;
       main.style.cssText = "font-size:16px;font-weight:bold;margin-bottom:4px;";
 
       const preview = document.createElement("div");
-      preview.textContent = matchedPreview(match, products);
       preview.style.cssText = "font-size:13px;color:#6b7280;line-height:1.4;";
+      for (const [index, matchedItem] of matchedPreviewItems(match, products).entries()) {
+        if (index > 0) preview.appendChild(document.createTextNode(", "));
+        appendHighlightedText(preview, matchedItem.name, query);
+        preview.appendChild(document.createTextNode(` | ${formatMoney(matchedItem.amount)}`));
+      }
 
       item.append(main, preview);
-      item.addEventListener("click", () => renderOrderDetail(match.order));
+      item.addEventListener("click", () => renderOrderDetail(match));
       list.appendChild(item);
     }
 
     content.replaceChildren(list);
   }
 
-  function renderOrderDetail(order: MergedReceipt): void {
+  function renderOrderDetail(match: OrderSearchMatch): void {
     title.textContent = "Order Details";
     backButton.style.display = "inline-block";
     input.style.display = "none";
 
-    content.replaceChildren(createOrderDetail(order, products));
+    content.replaceChildren(
+      createOrderDetail(match.order, products, new Set(match.matchedItemNumbers)),
+    );
   }
 
   closeButton.addEventListener("click", close);
