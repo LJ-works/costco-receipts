@@ -9,7 +9,7 @@ export default defineConfig({
         name: "costco-userjs",
         namespace: "https://github.com/costco-userjs",
         match: ["https://www.costco.com/*"],
-        // grant 由插件自动扫描推断，一般无需手写
+        // The plugin infers grants automatically, so they usually do not need to be listed.
       },
     }),
   ],

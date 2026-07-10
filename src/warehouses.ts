@@ -29,7 +29,7 @@ export function loadSelectedWarehouse(
     const parsed = JSON.parse(raw);
     if (typeof parsed?.id === "number" && typeof parsed?.name === "string") return parsed;
   } catch {
-    // 忽略损坏的存储内容
+    // Ignore corrupted stored data.
   }
   return null;
 }

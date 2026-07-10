@@ -27,7 +27,7 @@ function searchableTexts(item: MergedReceiptItem, products: ProductDetailMap): s
 }
 
 export function fallbackOrderItemName(item: MergedReceiptItem): string {
-  return orderItemDescriptions(item)[0] ?? `商品 #${item.itemNumber}`;
+  return orderItemDescriptions(item)[0] ?? `Item #${item.itemNumber}`;
 }
 
 export function searchOrdersByProductText(

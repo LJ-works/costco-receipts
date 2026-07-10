@@ -21,17 +21,17 @@ export async function showPriceMatchUi(): Promise<void> {
   topRow.style.cssText = "display:flex;align-items:center;gap:8px;";
 
   const backButton = document.createElement("button");
-  backButton.textContent = "返回";
+  backButton.textContent = "Back";
   backButton.style.cssText =
     "display:none;padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
 
   const title = document.createElement("div");
-  title.textContent = "30 天价格匹配";
+  title.textContent = "30-Day Price Match";
   title.style.cssText = "flex:1;font-size:18px;font-weight:bold;";
 
   const closeButton = document.createElement("button");
-  closeButton.textContent = "关闭";
+  closeButton.textContent = "Close";
   closeButton.style.cssText =
     "padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
@@ -45,12 +45,12 @@ export async function showPriceMatchUi(): Promise<void> {
   document.body.appendChild(overlay);
 
   function renderResults(): void {
-    title.textContent = "30 天价格匹配";
+    title.textContent = "30-Day Price Match";
     backButton.style.display = "none";
 
     if (matches.length === 0) {
       const empty = document.createElement("div");
-      empty.textContent = `最近 ${PRICE_MATCH_DAYS} 天没有符合条件的降价商品`;
+      empty.textContent = `No qualifying price drops were found in the last ${PRICE_MATCH_DAYS} days.`;
       empty.style.cssText = "padding:24px 8px;color:#6b7280;text-align:center;";
       content.replaceChildren(empty);
       return;
@@ -86,21 +86,21 @@ export async function showPriceMatchUi(): Promise<void> {
       name.style.cssText = "font-size:15px;font-weight:bold;margin-bottom:4px;";
 
       const id = document.createElement("div");
-      id.textContent = `商品号：${matchedItem.item.itemNumber}`;
+      id.textContent = `Item #: ${matchedItem.item.itemNumber}`;
       id.style.cssText = "font-size:12px;color:#6b7280;margin-bottom:7px;";
 
       const orderPrice = document.createElement("div");
-      orderPrice.textContent = `订单原始金额 ${formatMoney(matchedItem.item.amount)} · 订单折扣 ${formatMoney(matchedItem.item.discount)}`;
+      orderPrice.textContent = `Original purchase amount ${formatMoney(matchedItem.item.amount)} | Order discount ${formatMoney(matchedItem.item.discount)}`;
       orderPrice.style.cssText = "font-size:13px;color:#374151;line-height:1.5;";
 
       const priceMatch = document.createElement("div");
-      priceMatch.textContent = `折后旧价格 ${formatMoney(matchedItem.oldPrice)} · 新价格 ${formatMoney(matchedItem.newPrice)}`;
+      priceMatch.textContent = `Discounted old price ${formatMoney(matchedItem.oldPrice)} | New price ${formatMoney(matchedItem.newPrice)}`;
       priceMatch.style.cssText = "font-size:14px;font-weight:bold;color:#005dab;line-height:1.5;";
 
       button.append(name, id, orderPrice, priceMatch);
       if (matchedItem.quantity > 1) {
         const quantity = document.createElement("div");
-        quantity.textContent = `数量：${matchedItem.quantity}`;
+        quantity.textContent = `Quantity: ${matchedItem.quantity}`;
         quantity.style.cssText = "font-size:13px;color:#374151;margin-top:4px;";
         button.appendChild(quantity);
       }
@@ -113,7 +113,7 @@ export async function showPriceMatchUi(): Promise<void> {
   }
 
   function renderOrderDetail(match: PriceMatchOrder): void {
-    title.textContent = "订单详情";
+    title.textContent = "Order Details";
     backButton.style.display = "inline-block";
     content.replaceChildren(createOrderDetail(match.order, products));
   }

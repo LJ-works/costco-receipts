@@ -15,7 +15,7 @@ import {
 
 const INITIAL_SYNC_YEARS = 3;
 
-/** 需要拉取的商品 = 未缓存的全部 ∪ 近 recentDays 天购买过的（无论是否已缓存，用于刷新价格）。 */
+/** Products to fetch = all uncached products plus recently purchased products whose prices need refreshing. */
 export function selectProductsToFetch(
   orders: Pick<MergedReceipt, "transactionDate" | "itemArray">[],
   cached: Set<string>,
@@ -67,7 +67,7 @@ export async function syncOrdersAndProducts({
     startDate.setFullYear(startDate.getFullYear() - INITIAL_SYNC_YEARS);
   }
 
-  onProgress?.("订单", 0, 0);
+  onProgress?.("Orders", 0, 0);
   const { receipts } = await fetchReceiptsByDateRange({
     idToken,
     clientId,
@@ -75,7 +75,7 @@ export async function syncOrdersAndProducts({
     endDate: now,
     documentType: "warehouse",
   });
-  onProgress?.("订单", receipts.length, receipts.length);
+  onProgress?.("Orders", receipts.length, receipts.length);
 
   const oldOrders = await loadAllOrders();
   const oldOrderBarcodes = new Set(oldOrders.map((order) => order.transactionBarcode));
@@ -92,7 +92,7 @@ export async function syncOrdersAndProducts({
     itemNumbers: productsToFetch,
     clientId,
     warehouseNumber,
-    onProgress: (done, total) => onProgress?.("商品", done, total),
+    onProgress: (done, total) => onProgress?.("Products", done, total),
   });
   await saveProducts(productDetails);
   saveLastRetrieve(now);

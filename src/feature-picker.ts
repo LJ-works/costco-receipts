@@ -6,8 +6,8 @@ interface FeatureOption {
 }
 
 const FEATURES: FeatureOption[] = [
-  { key: "find-order", label: "查找订单" },
-  { key: "pricing-match", label: "30 天价格匹配" },
+  { key: "find-order", label: "Find Orders" },
+  { key: "pricing-match", label: "30-Day Price Match" },
 ];
 
 export function showFeaturePicker(): Promise<FeatureKey> {
@@ -23,7 +23,7 @@ export function showFeaturePicker(): Promise<FeatureKey> {
       "box-shadow:0 8px 24px rgba(0,0,0,.25);color:#111;";
 
     const title = document.createElement("div");
-    title.textContent = "选择功能";
+    title.textContent = "Choose a Feature";
     title.style.cssText = "font-size:18px;font-weight:bold;margin-bottom:14px;";
     box.appendChild(title);
 
