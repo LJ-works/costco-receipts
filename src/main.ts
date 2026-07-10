@@ -1,15 +1,15 @@
-import { fetchReceiptsByDateRange } from "./client";
-import { showFeaturePicker } from "./feature-picker";
-import { showOrderSearchUi } from "./order-search-ui";
-import { showPriceMatchUi } from "./price-match-ui";
-import { showProgress } from "./progress";
-import { syncOrdersAndProducts } from "./sync";
+import { fetchReceiptsByDateRange } from "./common/client";
+import { showProgress } from "./common/progress";
 import {
   extractWarehouses,
   loadSelectedWarehouse,
   saveSelectedWarehouse,
   type WarehouseVisit,
-} from "./warehouses";
+} from "./common/warehouses";
+import { showFeaturePicker } from "./feature-picker";
+import { showOrderSearchUi } from "./features/order-search/order-search-ui";
+import { showPriceMatchUi } from "./features/price-match/price-match-ui";
+import { syncOrdersAndProducts } from "./sync";
 
 const DAYS_BACK = 100;
 

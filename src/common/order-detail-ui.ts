@@ -1,5 +1,5 @@
 import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
-import { fallbackOrderItemName, formatMoney, orderItemNetAmount } from "./order-search";
+import { fallbackOrderItemName, formatMoney, orderItemNetAmount } from "./order";
 
 export function displayOrderItemName(item: MergedReceiptItem, products: ProductDetailMap): string {
   const productName = products[item.itemNumber]?.itemActualName?.trim();

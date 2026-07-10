@@ -1,7 +1,8 @@
-import type { MergedReceipt, ProductDetailMap } from "./client";
-import { loadAllOrders, loadAllProducts } from "./db";
-import { createOrderDetail, displayOrderItemName } from "./order-detail-ui";
-import { formatMoney, searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
+import type { MergedReceipt, ProductDetailMap } from "../../common/client";
+import { loadAllOrders, loadAllProducts } from "../../common/db";
+import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
+import { formatMoney } from "../../common/order";
+import { searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
 
 function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): string {
   const names = match.matchedItemNumbers.map((itemNumber) => {

@@ -13,6 +13,12 @@ The first time you run `npm run dev`, follow the browser prompt to install the d
 
 The script runs against the live costco.com page. After changing DOM interactions, verify them manually in desktop browsers and the supported iOS Userscripts environment.
 
+## Source Layout
+
+- `src/features/<feature>/` contains each feature's logic, UI, and colocated tests.
+- `src/common/` contains reusable API, storage, order, and UI helpers.
+- `src/main.ts`, `src/feature-picker.ts`, and `src/sync.ts` coordinate the application flow.
+
 ## Building
 
 ```bash

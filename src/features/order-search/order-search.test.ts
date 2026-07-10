@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
-import {
-  fallbackOrderItemName,
-  formatMoney,
-  orderItemNetAmount,
-  searchOrdersByProductText,
-} from "./order-search";
+import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "../../common/client";
+import { searchOrdersByProductText } from "./order-search";
 
 function item(
   itemNumber: string,
@@ -138,23 +133,5 @@ describe("searchOrdersByProductText", () => {
     expect(
       searchOrdersByProductText([oldOrder, newOrder], {}, "apple").map(({ order }) => order),
     ).toEqual([newOrder, oldOrder]);
-  });
-});
-
-describe("order item display helpers", () => {
-  it("adds the order discount to the original amount", () => {
-    expect(orderItemNetAmount({ amount: 12.99, discount: -3 })).toBeCloseTo(9.99);
-  });
-
-  it("formats positive and negative money with two decimal places", () => {
-    expect(formatMoney(9.5)).toBe("$9.50");
-    expect(formatMoney(-1.5)).toBe("-$1.50");
-  });
-
-  it("selects an order description and falls back to the item number", () => {
-    expect(fallbackOrderItemName(item("1", { itemDescription02: "Second description" }))).toBe(
-      "Second description",
-    );
-    expect(fallbackOrderItemName(item("42"))).toBe("Item #42");
   });
 });

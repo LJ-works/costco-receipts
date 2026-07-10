@@ -4,6 +4,7 @@ Costco userscript written in TypeScript and bundled into a single `.user.js` fil
 
 - The build output is a userscript, not a regular website or library. Configure userscript metadata such as `@match` and `@grant` in `vite.config.ts`.
 - Imported npm packages are bundled into the final `.user.js` file.
+- Keep feature-specific code under `src/features/<feature>/` and reusable modules under `src/common/`.
 - The script runs against the live costco.com page. Verify DOM interactions manually in a browser.
 
 ## Testing

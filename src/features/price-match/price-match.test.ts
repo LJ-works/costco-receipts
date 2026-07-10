@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
+import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "../../common/client";
 import { findPriceMatches, historicalItemPrice, isWeightedItem } from "./price-match";
 
 const now = new Date("2026-07-09T12:00:00");

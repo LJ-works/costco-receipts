@@ -1,4 +1,9 @@
-import type { MergedReceipt, MergedReceiptItem, ProductDetail, ProductDetailMap } from "./client";
+import type {
+  MergedReceipt,
+  MergedReceiptItem,
+  ProductDetail,
+  ProductDetailMap,
+} from "../../common/client";
 
 export const PRICE_MATCH_DAYS = 30;
 
