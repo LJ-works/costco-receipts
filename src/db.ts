@@ -1,5 +1,5 @@
 import { createStore, entries, keys, set } from "idb-keyval";
-import type { MergedReceipt, ProductDetailMap } from "./client";
+import type { MergedReceipt, ProductDetail, ProductDetailMap } from "./client";
 
 const ordersStore = createStore("costco-userjs:orders", "orders");
 const productsStore = createStore("costco-userjs:products", "products");
@@ -17,6 +17,11 @@ export async function loadAllOrders(): Promise<MergedReceipt[]> {
 export async function cachedProductNumbers(): Promise<Set<string>> {
   const productKeys = await keys<string>(productsStore);
   return new Set(productKeys);
+}
+
+export async function loadAllProducts(): Promise<ProductDetailMap> {
+  const allEntries = await entries<string, ProductDetail>(productsStore);
+  return Object.fromEntries(allEntries);
 }
 
 export async function saveProducts(map: ProductDetailMap): Promise<void> {

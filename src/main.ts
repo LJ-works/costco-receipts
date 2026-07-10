@@ -1,6 +1,8 @@
 import { fetchReceiptsByDateRange } from "./client";
+import { showFeaturePicker } from "./feature-picker";
+import { showOrderSearchUi } from "./order-search-ui";
 import { showProgress } from "./progress";
-import { syncOrdersAndProducts, type SyncResult } from "./sync";
+import { syncOrdersAndProducts } from "./sync";
 import {
   extractWarehouses,
   loadSelectedWarehouse,
@@ -73,10 +75,6 @@ async function discoverWarehouse(
   return showWarehousePicker(warehouses);
 }
 
-function formatSummary(result: SyncResult): string {
-  return `同步完成：本次新增订单 ${result.newOrderCount} 张（累计 ${result.totalOrderCount}）、去重商品 ${result.uniqueProductCount} 个、本次拉取/刷新详情 ${result.fetchedProductCount} 个`;
-}
-
 async function run(): Promise<void> {
   const idToken = localStorage.idToken;
   const clientId = localStorage.clientID;
@@ -92,21 +90,25 @@ async function run(): Promise<void> {
     const ui = showProgress();
 
     try {
-      const result = await syncOrdersAndProducts({
+      await syncOrdersAndProducts({
         idToken,
         clientId,
         warehouseNumber,
         onProgress: ui.update,
       });
-      ui.done(formatSummary(result));
+      ui.remove();
     } catch (err) {
       console.error("同步失败", err);
       ui.remove();
       alert("同步失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
+      return;
     }
+
+    const feature = await showFeaturePicker();
+    if (feature === "find-order") await showOrderSearchUi();
   } catch (err) {
-    console.error("获取账单失败", err);
-    alert("获取账单失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
+    console.error("获取账单或加载缓存失败", err);
+    alert("操作失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
   }
 }
 

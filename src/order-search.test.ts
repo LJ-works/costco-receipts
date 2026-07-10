@@ -1,0 +1,142 @@
+import { describe, expect, it } from "vitest";
+import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
+import {
+  fallbackOrderItemName,
+  formatMoney,
+  orderItemNetAmount,
+  searchOrdersByProductText,
+} from "./order-search";
+
+function item(
+  itemNumber: string,
+  descriptions: Partial<
+    Pick<
+      MergedReceiptItem,
+      | "itemDescription01"
+      | "itemDescription02"
+      | "frenchItemDescription1"
+      | "frenchItemDescription2"
+    >
+  > = {},
+): MergedReceiptItem {
+  return {
+    itemNumber,
+    itemDescription01: null,
+    itemDescription02: null,
+    frenchItemDescription1: null,
+    frenchItemDescription2: null,
+    amount: 10,
+    discount: 0,
+    itemIdentifier: null,
+    itemDepartmentNumber: null,
+    unit: 1,
+    taxFlag: null,
+    merchantID: null,
+    entryMethod: null,
+    transDepartmentNumber: null,
+    fuelUnitQuantity: null,
+    fuelGradeCode: null,
+    itemUnitPriceAmount: null,
+    fuelUomCode: null,
+    fuelUomDescription: null,
+    fuelUomDescriptionFr: null,
+    fuelGradeDescription: null,
+    fuelGradeDescriptionFr: null,
+    ...descriptions,
+  };
+}
+
+function order(transactionDate: string, items: MergedReceiptItem[]): MergedReceipt {
+  return { transactionDate, itemArray: items } as MergedReceipt;
+}
+
+function products(names: Record<string, string>): ProductDetailMap {
+  return Object.fromEntries(
+    Object.entries(names).map(([itemNumber, itemActualName]) => [
+      itemNumber,
+      { itemNumber, itemActualName },
+    ]),
+  ) as ProductDetailMap;
+}
+
+describe("searchOrdersByProductText", () => {
+  it("matches ProductDetail.itemActualName instead of requiring the order description", () => {
+    const receipt = order("2026-07-01", [item("1", { itemDescription01: "UNRELATED" })]);
+
+    expect(
+      searchOrdersByProductText([receipt], products({ "1": "Organic Bananas" }), "banana"),
+    ).toMatchObject([{ order: receipt, matchedItemNumbers: ["1"] }]);
+  });
+
+  it("also matches order item descriptions when a different product name is cached", () => {
+    const receipt = order("2026-07-01", [item("1", { itemDescription01: "KIRKLAND ALMONDS" })]);
+
+    expect(
+      searchOrdersByProductText([receipt], products({ "1": "Mixed Nuts" }), "almond"),
+    ).toMatchObject([{ order: receipt, matchedItemNumbers: ["1"] }]);
+  });
+
+  it("matches order item descriptions when product details are missing", () => {
+    const receipt = order("2026-07-01", [item("1", { itemDescription01: "FRESH MILK" })]);
+
+    expect(searchOrdersByProductText([receipt], {}, "milk")).toHaveLength(1);
+  });
+
+  it("matches name substrings case-insensitively", () => {
+    const receipt = order("2026-07-01", [item("1")]);
+
+    expect(
+      searchOrdersByProductText([receipt], products({ "1": "Chocolate Cookies" }), "ATE coo"),
+    ).toHaveLength(1);
+  });
+
+  it("matches an item number only when the full id is entered", () => {
+    const receipt = order("2026-07-01", [item("12345")]);
+
+    expect(searchOrdersByProductText([receipt], {}, "12345")).toHaveLength(1);
+    expect(searchOrdersByProductText([receipt], {}, "123")).toEqual([]);
+  });
+
+  it("deduplicates matched item numbers and each matching order", () => {
+    const receipt = order("2026-07-01", [
+      item("1", { itemDescription01: "APPLE" }),
+      item("1", { itemDescription01: "APPLE" }),
+      item("2", { itemDescription01: "APPLE PIE" }),
+    ]);
+
+    expect(searchOrdersByProductText([receipt], {}, "apple")).toEqual([
+      { order: receipt, matchedItemNumbers: ["1", "2"] },
+    ]);
+  });
+
+  it("returns no matches for an empty query", () => {
+    expect(searchOrdersByProductText([order("2026-07-01", [item("1")])], {}, "  ")).toEqual([]);
+  });
+
+  it("sorts matching orders newest first", () => {
+    const oldOrder = order("2026-05-01", [item("1", { itemDescription01: "APPLE" })]);
+    const newOrder = order("2026-07-01", [item("2", { itemDescription01: "APPLE" })]);
+
+    expect(
+      searchOrdersByProductText([oldOrder, newOrder], {}, "apple").map(({ order }) => order),
+    ).toEqual([newOrder, oldOrder]);
+  });
+});
+
+describe("order item display helpers", () => {
+  it("adds the order discount to the original amount", () => {
+    expect(orderItemNetAmount({ amount: 12.99, discount: -3 })).toBeCloseTo(9.99);
+  });
+
+  it("formats positive and negative money with two decimal places", () => {
+    expect(formatMoney(9.5)).toBe("$9.50");
+    expect(formatMoney(-1.5)).toBe("-$1.50");
+  });
+
+  it("selects an order description and falls back to the item number", () => {
+    expect(fallbackOrderItemName(item("1", { itemDescription02: "Second description" }))).toBe(
+      "Second description",
+    );
+    expect(fallbackOrderItemName(item("42"))).toBe("商品 #42");
+  });
+});
