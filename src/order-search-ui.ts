@@ -1,40 +1,12 @@
-import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
+import type { MergedReceipt, ProductDetailMap } from "./client";
 import { loadAllOrders, loadAllProducts } from "./db";
-import {
-  fallbackOrderItemName,
-  formatMoney,
-  orderItemNetAmount,
-  searchOrdersByProductText,
-  type OrderSearchMatch,
-} from "./order-search";
-
-function productName(
-  item: Pick<MergedReceiptItem, "itemNumber">,
-  products: ProductDetailMap,
-): string | null {
-  const name = products[item.itemNumber]?.itemActualName?.trim();
-  return name ? name : null;
-}
-
-function displayItemName(item: MergedReceiptItem, products: ProductDetailMap): string {
-  return productName(item, products) ?? fallbackOrderItemName(item);
-}
-
-function itemAmountText(item: MergedReceiptItem): string {
-  if (item.discount === 0) return formatMoney(item.amount);
-
-  return `原价 ${formatMoney(item.amount)}，优惠 ${formatMoney(Math.abs(item.discount))}，折后 ${formatMoney(orderItemNetAmount(item))}`;
-}
-
-function itemQuantityText(item: MergedReceiptItem): string | null {
-  if (item.unit == null || item.unit === 1) return null;
-  return `数量 ${item.unit}`;
-}
+import { createOrderDetail, displayOrderItemName } from "./order-detail-ui";
+import { formatMoney, searchOrdersByProductText, type OrderSearchMatch } from "./order-search";
 
 function matchedPreview(match: OrderSearchMatch, products: ProductDetailMap): string {
   const names = match.matchedItemNumbers.map((itemNumber) => {
     const item = match.order.itemArray.find((candidate) => candidate.itemNumber === itemNumber);
-    return item ? displayItemName(item, products) : products[itemNumber]?.itemActualName;
+    return item ? displayOrderItemName(item, products) : products[itemNumber]?.itemActualName;
   });
   return names
     .filter((name): name is string => Boolean(name))
@@ -157,49 +129,7 @@ export async function showOrderSearchUi(): Promise<void> {
     backButton.style.display = "inline-block";
     input.style.display = "none";
 
-    const container = document.createElement("div");
-    container.style.cssText = "display:flex;flex-direction:column;gap:12px;";
-
-    const summary = document.createElement("div");
-    summary.style.cssText =
-      "padding:12px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;";
-
-    const summaryTitle = document.createElement("div");
-    summaryTitle.textContent = `${order.transactionDate} · ${formatMoney(order.total)}`;
-    summaryTitle.style.cssText = "font-size:17px;font-weight:bold;margin-bottom:4px;";
-
-    const warehouse = document.createElement("div");
-    warehouse.textContent = order.warehouseName ? `门店：${order.warehouseName}` : "";
-    warehouse.style.cssText = "font-size:13px;color:#6b7280;";
-
-    summary.append(summaryTitle, warehouse);
-    container.appendChild(summary);
-
-    for (const orderItem of order.itemArray) {
-      const row = document.createElement("div");
-      row.style.cssText =
-        "padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;";
-
-      const name = document.createElement("div");
-      name.textContent = displayItemName(orderItem, products);
-      name.style.cssText = "font-size:15px;font-weight:bold;margin-bottom:4px;";
-
-      const productId = document.createElement("div");
-      productId.textContent = `商品号：${orderItem.itemNumber}`;
-      productId.style.cssText = "font-size:12px;color:#6b7280;margin-bottom:6px;";
-
-      const metaParts = [itemQuantityText(orderItem), itemAmountText(orderItem)].filter(
-        (part): part is string => Boolean(part),
-      );
-      const meta = document.createElement("div");
-      meta.textContent = metaParts.join(" · ");
-      meta.style.cssText = "font-size:13px;color:#374151;line-height:1.4;";
-
-      row.append(name, productId, meta);
-      container.appendChild(row);
-    }
-
-    content.replaceChildren(container);
+    content.replaceChildren(createOrderDetail(order, products));
   }
 
   closeButton.addEventListener("click", close);

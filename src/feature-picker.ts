@@ -1,4 +1,14 @@
-export type FeatureKey = "find-order";
+export type FeatureKey = "find-order" | "pricing-match";
+
+interface FeatureOption {
+  key: FeatureKey;
+  label: string;
+}
+
+const FEATURES: FeatureOption[] = [
+  { key: "find-order", label: "查找订单" },
+  { key: "pricing-match", label: "30 天价格匹配" },
+];
 
 export function showFeaturePicker(): Promise<FeatureKey> {
   return new Promise((resolve) => {
@@ -15,18 +25,21 @@ export function showFeaturePicker(): Promise<FeatureKey> {
     const title = document.createElement("div");
     title.textContent = "选择功能";
     title.style.cssText = "font-size:18px;font-weight:bold;margin-bottom:14px;";
+    box.appendChild(title);
 
-    const button = document.createElement("button");
-    button.textContent = "查找订单";
-    button.style.cssText =
-      "display:block;width:100%;padding:12px;background:#005dab;color:#fff;" +
-      "border:none;border-radius:6px;font-size:16px;cursor:pointer;text-align:center;";
-    button.addEventListener("click", () => {
-      overlay.remove();
-      resolve("find-order");
-    });
+    for (const feature of FEATURES) {
+      const button = document.createElement("button");
+      button.textContent = feature.label;
+      button.style.cssText =
+        "display:block;width:100%;padding:12px;margin-top:10px;background:#005dab;color:#fff;" +
+        "border:none;border-radius:6px;font-size:16px;cursor:pointer;text-align:center;";
+      button.addEventListener("click", () => {
+        overlay.remove();
+        resolve(feature.key);
+      });
+      box.appendChild(button);
+    }
 
-    box.append(title, button);
     overlay.appendChild(box);
     document.body.appendChild(overlay);
   });

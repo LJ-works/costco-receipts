@@ -1,6 +1,7 @@
 import { fetchReceiptsByDateRange } from "./client";
 import { showFeaturePicker } from "./feature-picker";
 import { showOrderSearchUi } from "./order-search-ui";
+import { showPriceMatchUi } from "./price-match-ui";
 import { showProgress } from "./progress";
 import { syncOrdersAndProducts } from "./sync";
 import {
@@ -106,6 +107,7 @@ async function run(): Promise<void> {
 
     const feature = await showFeaturePicker();
     if (feature === "find-order") await showOrderSearchUi();
+    if (feature === "pricing-match") await showPriceMatchUi();
   } catch (err) {
     console.error("获取账单或加载缓存失败", err);
     alert("操作失败，请先登录 costco.com，并打开 “Account > Orders & Purchases” 页面后重试。");
