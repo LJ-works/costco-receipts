@@ -68,7 +68,7 @@ jobs:
       - name: Check out release commit
         uses: actions/checkout@v7
         with:
-          # draft release 尚未创建 git tag，checkout tag 会失败；release commit 即本次 push 的 SHA，内容一致且必然存在
+          # release commit 即本次 push 的 SHA，与 tag 内容一致且必然存在
           ref: ${{ github.sha }}
 
       - name: Set up Node.js
@@ -88,9 +88,3 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: gh release upload "$TAG_NAME" dist/*.user.js --clobber
-
-      - name: Publish release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
-        run: gh release edit "$TAG_NAME" --draft=false
