@@ -1,6 +1,6 @@
-import { loadAllOrders, loadAllProducts } from "./db";
-import { createOrderDetail, displayOrderItemName } from "./order-detail-ui";
-import { formatMoney } from "./order-search";
+import { loadAllOrders, loadAllProducts } from "../../common/db";
+import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
+import { formatMoney } from "../../common/order";
 import { PRICE_MATCH_DAYS, findPriceMatches, type PriceMatchOrder } from "./price-match";
 
 export async function showPriceMatchUi(): Promise<void> {

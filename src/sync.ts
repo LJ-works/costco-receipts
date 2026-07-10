@@ -3,7 +3,7 @@ import {
   fetchReceiptsByDateRange,
   type CostcoAuth,
   type MergedReceipt,
-} from "./client";
+} from "./common/client";
 import {
   cachedProductNumbers,
   loadAllOrders,
@@ -11,7 +11,7 @@ import {
   saveLastRetrieve,
   saveOrders,
   saveProducts,
-} from "./db";
+} from "./common/db";
 
 const INITIAL_SYNC_YEARS = 3;
 

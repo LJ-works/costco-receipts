@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MergedReceipt } from "./client";
+import type { MergedReceipt } from "./common/client";
 import { selectProductsToFetch } from "./sync";
 
 type TestOrder = Pick<MergedReceipt, "transactionDate" | "itemArray">;

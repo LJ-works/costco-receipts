@@ -1,4 +1,5 @@
-import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "./client";
+import type { MergedReceipt, MergedReceiptItem, ProductDetailMap } from "../../common/client";
+import { orderItemDescriptions } from "../../common/order";
 
 export interface OrderSearchMatch {
   order: MergedReceipt;
@@ -13,21 +14,8 @@ function nonEmptyTexts(values: (string | null | undefined)[]): string[] {
   return values.map((value) => value?.trim() ?? "").filter((value) => value.length > 0);
 }
 
-function orderItemDescriptions(item: MergedReceiptItem): string[] {
-  return nonEmptyTexts([
-    item.itemDescription01,
-    item.itemDescription02,
-    item.frenchItemDescription1,
-    item.frenchItemDescription2,
-  ]);
-}
-
 function searchableTexts(item: MergedReceiptItem, products: ProductDetailMap): string[] {
   return nonEmptyTexts([products[item.itemNumber]?.itemActualName, ...orderItemDescriptions(item)]);
-}
-
-export function fallbackOrderItemName(item: MergedReceiptItem): string {
-  return orderItemDescriptions(item)[0] ?? `Item #${item.itemNumber}`;
 }
 
 export function searchOrdersByProductText(
@@ -59,13 +47,4 @@ export function searchOrdersByProductText(
   }
 
   return matches.sort((a, b) => b.order.transactionDate.localeCompare(a.order.transactionDate));
-}
-
-export function formatMoney(value: number): string {
-  const sign = value < 0 ? "-" : "";
-  return `${sign}$${Math.abs(value).toFixed(2)}`;
-}
-
-export function orderItemNetAmount(item: Pick<MergedReceiptItem, "amount" | "discount">): number {
-  return item.amount + item.discount;
 }
