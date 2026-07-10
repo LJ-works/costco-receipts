@@ -41,8 +41,8 @@ This setup requires iOS or iPadOS 15.1 or later and Safari.
 1. Install [Userscripts](https://apps.apple.com/us/app/userscripts/id1463298887) from the App Store.
 2. Open the Userscripts app. Recent versions create a default scripts directory automatically. If prompted, tap **Set Userscripts Directory** and select a directory.
 3. Enable Userscripts under **Safari > Extensions** in the Settings app. You can also manage it from Safari's `AA` or extensions button. For the best experience, grant Userscripts **Always Allow** access to **All Websites**.
-4. Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) in Safari.
-5. Open the Userscripts extension panel in Safari, tap the installation prompt, and complete the installation.
+4. Tap the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) link in Safari to download the file.
+5. Save the downloaded file into the Userscripts directory you selected in step 2.
 6. Sign in to costco.com and open **Account > Orders & Purchases**.
 7. Tap **Start** in the bottom-right corner, wait for synchronization to finish, and select a feature.
 
