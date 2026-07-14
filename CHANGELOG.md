@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.3.1...costco-userjs-v1.4.0) (2026-07-14)
+
+
+### Features
+
+* add Price Watch feature ([a6239da](https://github.com/LJ-works/costco-receipts/commit/a6239dab96705fed065ff4f4dc80c283f1d4b2f8))
+* add Price Watch feature ([7da3207](https://github.com/LJ-works/costco-receipts/commit/7da3207a001b430d873bfb7d0536177c4a942ab0))
+* extend initial sync window to 5 years ([#19](https://github.com/LJ-works/costco-receipts/issues/19)) ([08ac9de](https://github.com/LJ-works/costco-receipts/commit/08ac9dec80a9b296e40107c4213c487a18a90ef7))
+
 ## [1.3.1](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.3.0...costco-userjs-v1.3.1) (2026-07-10)
 
 
