@@ -1,6 +1,6 @@
 # Costco Order Assistant
 
-A userscript for costco.com that synchronizes orders locally, finds historical orders by product, and checks whether recently purchased products have dropped in price. All order and product caches remain in your browser and are never uploaded to a third-party service.
+A userscript for costco.com that synchronizes orders locally, finds historical orders by product, checks whether recently purchased products have dropped in price, and warns when watched products go on sale. All order and product caches remain in your browser and are never uploaded to a third-party service.
 
 ## Features
 
@@ -18,6 +18,13 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 - Automatically skip refunds, weighted items, discontinued or unavailable products, and items that have not dropped in price.
 - Group eligible items by order and show the item number, original purchase amount, discount, discounted old price, and new price.
 
+### Price Watch
+
+- Maintain a personal watchlist of up to 50 products to monitor for price drops, added and removed by item number.
+- Each entry shows the item number, name, regular price, and the current price when it is lower than usual.
+- Discounted items are highlighted, and the feature button in the picker shows a badge with the number of watched items currently on sale.
+- Watched items are refreshed on every **Start** sync so their prices and the badge stay up to date.
+
 ### Local Data Sync
 
 When you click **Start**, the script incrementally synchronizes in-warehouse orders and product details before showing the feature picker. The first run retrieves orders from the last three years. Later runs retrieve only orders since the last successful sync and refresh prices for recently purchased products.
@@ -32,7 +39,7 @@ Before using the script, sign in to [costco.com](https://www.costco.com/) and op
 2. Open the [latest userscript](https://github.com/LJ-works/costco-receipts/releases/latest/download/costco-userjs.user.js) and confirm the installation in your userscript manager.
 3. Sign in to costco.com and open **Account > Orders & Purchases**.
 4. Click **Start** in the bottom-right corner of the page.
-5. Wait for synchronization to finish, then choose **Find Orders** or **30-Day Price Adjustment**.
+5. Wait for synchronization to finish, then choose **Find Orders**, **30-Day Price Adjustment**, or **Price Watch**.
 
 ### iPhone and iPad
 

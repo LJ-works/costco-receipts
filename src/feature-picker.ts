@@ -1,4 +1,4 @@
-export type FeatureKey = "find-order" | "price-adjustment";
+export type FeatureKey = "find-order" | "price-adjustment" | "pricing-warning";
 
 interface FeatureOption {
   key: FeatureKey;
@@ -8,9 +8,12 @@ interface FeatureOption {
 const FEATURES: FeatureOption[] = [
   { key: "find-order", label: "Find Orders" },
   { key: "price-adjustment", label: "30-Day Price Adjustment" },
+  { key: "pricing-warning", label: "Price Watch" },
 ];
 
-export function showFeaturePicker(): Promise<FeatureKey> {
+export function showFeaturePicker(
+  badges: Partial<Record<FeatureKey, number>> = {},
+): Promise<FeatureKey> {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.style.cssText =
@@ -33,6 +36,19 @@ export function showFeaturePicker(): Promise<FeatureKey> {
       button.style.cssText =
         "display:block;width:100%;padding:12px;margin-top:10px;background:#005dab;color:#fff;" +
         "border:none;border-radius:6px;font-size:16px;cursor:pointer;text-align:center;";
+
+      const count = badges[feature.key] ?? 0;
+      if (count > 0) {
+        const badge = document.createElement("span");
+        badge.textContent = String(count);
+        badge.style.cssText =
+          "display:inline-flex;align-items:center;justify-content:center;" +
+          "min-width:20px;height:20px;box-sizing:border-box;padding:0 6px;" +
+          "background:#dc2626;color:#fff;border-radius:999px;margin-left:8px;" +
+          "font-size:12px;line-height:1;";
+        button.appendChild(badge);
+      }
+
       button.addEventListener("click", () => {
         overlay.remove();
         resolve(feature.key);
