@@ -14,7 +14,7 @@ import {
 } from "./common/db";
 import { loadWatchlist } from "./features/pricing-warning/pricing-warning";
 
-const INITIAL_SYNC_YEARS = 3;
+const INITIAL_SYNC_YEARS = 5;
 
 /** Products to fetch = all uncached products plus recently purchased products whose prices need refreshing. */
 export function selectProductsToFetch(

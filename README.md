@@ -27,7 +27,7 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 
 ### Local Data Sync
 
-When you click **Start**, the script incrementally synchronizes in-warehouse orders and product details before showing the feature picker. The first run retrieves orders from the last three years. Later runs retrieve only orders since the last successful sync and refresh prices for recently purchased products.
+When you click **Start**, the script incrementally synchronizes in-warehouse orders and product details before showing the feature picker. The first run retrieves orders from the last five years. Later runs retrieve only orders since the last successful sync and refresh prices for recently purchased products.
 
 ## Usage
 
