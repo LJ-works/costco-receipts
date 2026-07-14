@@ -37,4 +37,22 @@ describe("selectProductsToFetch", () => {
       ).sort(),
     ).toEqual(["1", "2", "3"]);
   });
+
+  it("always selects watched items even when cached and not recent", () => {
+    expect(
+      selectProductsToFetch([order("2026-05-01", ["1"])], new Set(["1"]), now, 30, ["1"]),
+    ).toEqual(["1"]);
+  });
+
+  it("unions watched items with recent and uncached, deduplicated", () => {
+    expect(
+      selectProductsToFetch(
+        [order("2026-07-01", ["1"]), order("2026-05-01", ["2"])],
+        new Set(["1", "2"]),
+        now,
+        30,
+        ["2", "3"],
+      ).sort(),
+    ).toEqual(["1", "2", "3"]);
+  });
 });

@@ -12,6 +12,7 @@ import {
   saveOrders,
   saveProducts,
 } from "./common/db";
+import { loadWatchlist } from "./features/pricing-warning/pricing-warning";
 
 const INITIAL_SYNC_YEARS = 3;
 
@@ -21,6 +22,7 @@ export function selectProductsToFetch(
   cached: Set<string>,
   now: Date,
   recentDays = 30,
+  watchlist: string[] = [],
 ): string[] {
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - recentDays);
@@ -41,6 +43,8 @@ export function selectProductsToFetch(
   for (const itemNumber of all) {
     if (!cached.has(itemNumber)) selected.add(itemNumber);
   }
+  // Always refresh watched items so the badge and prices stay current.
+  for (const itemNumber of watchlist) selected.add(itemNumber);
   return [...selected];
 }
 
@@ -86,7 +90,7 @@ export async function syncOrdersAndProducts({
   await saveOrders(receipts);
   const allOrders = await loadAllOrders();
   const cached = await cachedProductNumbers();
-  const productsToFetch = selectProductsToFetch(allOrders, cached, now);
+  const productsToFetch = selectProductsToFetch(allOrders, cached, now, 30, loadWatchlist());
 
   const productDetails = await fetchBatchItemDetails({
     itemNumbers: productsToFetch,
