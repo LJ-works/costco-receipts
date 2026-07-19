@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.4.0...costco-userjs-v1.5.0) (2026-07-19)
+
+
+### Features
+
+* use warehouse savings for deal pricing ([#20](https://github.com/LJ-works/costco-receipts/issues/20)) ([ba4b2ce](https://github.com/LJ-works/costco-receipts/commit/ba4b2ceb2ca1fa67237093f2f1e5cc2ef6d0d44d))
+
 ## [1.4.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.3.1...costco-userjs-v1.4.0) (2026-07-14)
 
 
