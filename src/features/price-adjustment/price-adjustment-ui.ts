@@ -1,4 +1,5 @@
 import { loadAllOrders, loadAllProducts } from "../../common/db";
+import type { WarehouseDeal } from "../../common/warehouse-savings";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
 import {
@@ -7,9 +8,13 @@ import {
   type PriceAdjustmentOrder,
 } from "./price-adjustment";
 
-export async function showPriceAdjustmentUi(): Promise<void> {
+export async function showPriceAdjustmentUi(options: {
+  warehouseDeals: readonly WarehouseDeal[] | null;
+}): Promise<void> {
   const [orders, products] = await Promise.all([loadAllOrders(), loadAllProducts()]);
-  const adjustments = findPriceAdjustments(orders, products, new Date(), PRICE_ADJUSTMENT_DAYS);
+  const adjustments = options.warehouseDeals
+    ? findPriceAdjustments(orders, options.warehouseDeals, new Date(), PRICE_ADJUSTMENT_DAYS)
+    : [];
 
   const overlay = document.createElement("div");
   overlay.style.cssText =
@@ -51,6 +56,15 @@ export async function showPriceAdjustmentUi(): Promise<void> {
   function renderResults(): void {
     title.textContent = "30-Day Price Adjustment";
     backButton.style.display = "none";
+
+    if (!options.warehouseDeals) {
+      const unavailable = document.createElement("div");
+      unavailable.textContent =
+        "Warehouse Savings is unavailable. No product API price fallback is used.";
+      unavailable.style.cssText = "padding:24px 8px;color:#92400e;text-align:center;";
+      content.replaceChildren(unavailable);
+      return;
+    }
 
     if (adjustments.length === 0) {
       const empty = document.createElement("div");
@@ -98,11 +112,18 @@ export async function showPriceAdjustmentUi(): Promise<void> {
       orderPrice.style.cssText = "font-size:13px;color:#374151;line-height:1.5;";
 
       const adjustmentPrice = document.createElement("div");
-      adjustmentPrice.textContent = `Discounted old price ${formatMoney(adjustedItem.oldPrice)} | New price ${formatMoney(adjustedItem.newPrice)}`;
+      const estimateLabel = adjustedItem.estimated ? "Estimated new price" : "New campaign price";
+      adjustmentPrice.textContent =
+        `${estimateLabel} ${formatMoney(adjustedItem.newPrice)} | ` +
+        `Potential adjustment ${formatMoney(adjustedItem.adjustment)}`;
       adjustmentPrice.style.cssText =
         "font-size:14px;font-weight:bold;color:#005dab;line-height:1.5;";
 
-      button.append(name, id, orderPrice, adjustmentPrice);
+      const offer = document.createElement("div");
+      offer.textContent = `Warehouse Savings: ${adjustedItem.deal.offer.raw.displayText}`;
+      offer.style.cssText = "font-size:13px;color:#374151;line-height:1.5;";
+
+      button.append(name, id, orderPrice, adjustmentPrice, offer);
       if (adjustedItem.quantity > 1) {
         const quantity = document.createElement("div");
         quantity.textContent = `Quantity: ${adjustedItem.quantity}`;

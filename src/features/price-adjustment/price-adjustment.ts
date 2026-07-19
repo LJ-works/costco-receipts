@@ -1,18 +1,25 @@
-import type {
-  MergedReceipt,
-  MergedReceiptItem,
-  ProductDetail,
-  ProductDetailMap,
-} from "../../common/client";
+import type { MergedReceipt, MergedReceiptItem } from "../../common/client";
+import {
+  buildWarehouseDealIndex,
+  selectExactWarehouseDeal,
+  type ExactWarehouseDeal,
+} from "../../common/warehouse-deals";
+import type { WarehouseDeal } from "../../common/warehouse-savings";
 
 export const PRICE_ADJUSTMENT_DAYS = 30;
 
+export type PriceCalculationMode = "exact_final" | "displayed_price" | "inferred_saving";
+
 export interface PriceAdjustmentItem {
   item: MergedReceiptItem;
-  product: ProductDetail;
+  deal: ExactWarehouseDeal;
   quantity: number;
   oldPrice: number;
   newPrice: number;
+  adjustment: number;
+  campaignSaving: number | null;
+  calculationMode: PriceCalculationMode;
+  estimated: boolean;
 }
 
 export interface PriceAdjustmentOrder {
@@ -46,35 +53,31 @@ function mergeKey(item: MergedReceiptItem): string {
 
 export function findPriceAdjustments(
   orders: MergedReceipt[],
-  products: ProductDetailMap,
+  deals: readonly WarehouseDeal[],
   now: Date,
   recentDays = PRICE_ADJUSTMENT_DAYS,
 ): PriceAdjustmentOrder[] {
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - recentDays);
   const cutoffDate = formatLocalDate(cutoff);
+  const dealIndex = buildWarehouseDealIndex(deals);
   const adjustments: PriceAdjustmentOrder[] = [];
 
   for (const order of orders) {
     if (order.transactionDate < cutoffDate || !isWarehouseSale(order)) continue;
 
     const mergedItems = new Map<string, PriceAdjustmentItem>();
-
     for (const item of order.itemArray) {
-      const product = products[item.itemNumber];
-      if (!product || isWeightedItem(item) || product.listPrice === null) continue;
-
-      const oldPrice = historicalItemPrice(item);
-      const newPrice = product.listPrice;
-      if (newPrice >= oldPrice) continue;
+      if (isWeightedItem(item)) continue;
+      const deal = selectExactWarehouseDeal(dealIndex.get(item.itemNumber));
+      if (!deal) continue;
+      const adjustment = calculateAdjustment(item, deal);
+      if (!adjustment) continue;
 
       const key = mergeKey(item);
       const existing = mergedItems.get(key);
-      if (existing) {
-        existing.quantity += 1;
-      } else {
-        mergedItems.set(key, { item, product, quantity: 1, oldPrice, newPrice });
-      }
+      if (existing) existing.quantity += 1;
+      else mergedItems.set(key, adjustment);
     }
 
     const items = [...mergedItems.values()];
@@ -82,4 +85,50 @@ export function findPriceAdjustments(
   }
 
   return adjustments.sort((a, b) => b.order.transactionDate.localeCompare(a.order.transactionDate));
+}
+
+function calculateAdjustment(
+  item: MergedReceiptItem,
+  deal: ExactWarehouseDeal,
+): PriceAdjustmentItem | null {
+  const grossCents = dollarsToCents(item.amount);
+  const oldPriceCents = dollarsToCents(historicalItemPrice(item));
+  let newPriceCents: number;
+  let campaignSavingCents: number | null = null;
+  let calculationMode: PriceCalculationMode;
+  let estimated = false;
+
+  if (deal.offer.kind === "final_price_after_discount") {
+    newPriceCents = deal.offer.finalPrice.cents;
+    campaignSavingCents = deal.offer.saving.cents;
+    calculationMode = "exact_final";
+  } else if (deal.offer.kind === "displayed_price_only") {
+    newPriceCents = deal.offer.price.cents;
+    calculationMode = "displayed_price";
+  } else {
+    const historicalSavingCents = Math.max(0, -dollarsToCents(item.discount));
+    campaignSavingCents = deal.offer.saving.cents;
+    if (campaignSavingCents <= historicalSavingCents) return null;
+    newPriceCents = grossCents - campaignSavingCents;
+    if (newPriceCents < 0) return null;
+    calculationMode = "inferred_saving";
+    estimated = true;
+  }
+
+  if (newPriceCents >= oldPriceCents) return null;
+  return {
+    item,
+    deal,
+    quantity: 1,
+    oldPrice: oldPriceCents / 100,
+    newPrice: newPriceCents / 100,
+    adjustment: (oldPriceCents - newPriceCents) / 100,
+    campaignSaving: campaignSavingCents === null ? null : campaignSavingCents / 100,
+    calculationMode,
+    estimated,
+  };
+}
+
+function dollarsToCents(value: number): number {
+  return Math.round(value * 100);
 }

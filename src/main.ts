@@ -1,6 +1,6 @@
 import { fetchReceiptsByDateRange } from "./common/client";
-import { loadAllProducts } from "./common/db";
 import { showProgress } from "./common/progress";
+import { fetchWarehouseSavings } from "./common/warehouse-savings-client";
 import {
   extractWarehouses,
   loadSelectedWarehouse,
@@ -10,7 +10,10 @@ import {
 import { showFeaturePicker } from "./feature-picker";
 import { showOrderSearchUi } from "./features/order-search/order-search-ui";
 import { showPriceAdjustmentUi } from "./features/price-adjustment/price-adjustment-ui";
-import { countDiscounted, loadWatchlist } from "./features/pricing-warning/pricing-warning";
+import {
+  countActiveWatchlistDeals,
+  loadWatchlist,
+} from "./features/pricing-warning/pricing-warning";
 import { showPricingWarningUi } from "./features/pricing-warning/pricing-warning-ui";
 import { syncOrdersAndProducts } from "./sync";
 
@@ -110,11 +113,18 @@ async function run(): Promise<void> {
       return;
     }
 
-    const discountedCount = countDiscounted(loadWatchlist(), await loadAllProducts());
+    const warehouseSavings = await fetchWarehouseSavings().catch((error: unknown) => {
+      console.error("Failed to load Warehouse Savings", error);
+      return null;
+    });
+    const warehouseDeals = warehouseSavings?.deals ?? null;
+    const discountedCount = warehouseDeals
+      ? countActiveWatchlistDeals(loadWatchlist(), warehouseDeals)
+      : 0;
     const feature = await showFeaturePicker({ "pricing-warning": discountedCount });
     if (feature === "find-order") await showOrderSearchUi();
-    if (feature === "price-adjustment") await showPriceAdjustmentUi();
-    if (feature === "pricing-warning") await showPricingWarningUi({ clientId, warehouseNumber });
+    if (feature === "price-adjustment") await showPriceAdjustmentUi({ warehouseDeals });
+    if (feature === "pricing-warning") await showPricingWarningUi({ warehouseDeals });
   } catch (err) {
     console.error("Failed to retrieve orders or load the cache", err);
     alert(

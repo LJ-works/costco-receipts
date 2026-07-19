@@ -1,27 +1,42 @@
 import { describe, expect, it } from "vitest";
-import type { ProductDetail, ProductDetailMap } from "../../common/client";
+import type { WarehouseDeal } from "../../common/warehouse-savings";
 import {
-  countDiscounted,
-  isDiscounted,
+  activeWatchlistItems,
+  countActiveWatchlistDeals,
   loadWatchlist,
   normalizeItemNumber,
   saveWatchlist,
 } from "./pricing-warning";
 
-function product(price: number | null, listPrice: number | null): ProductDetail {
-  return { itemNumber: "x", itemActualName: "x", price, listPrice } as ProductDetail;
-}
-
-function products(entries: Record<string, ProductDetail>): ProductDetailMap {
-  return entries as ProductDetailMap;
+function deal(
+  itemNumber: string,
+  applicability: WarehouseDeal["applicability"] = "warehouse_only",
+): WarehouseDeal {
+  return {
+    category: "Grocery",
+    title: `Item ${itemNumber}`,
+    itemNumber,
+    productId: null,
+    couponType: "item",
+    applicability,
+    url: null,
+    imageUrl: null,
+    offerDetails: null,
+    offerTerms: null,
+    additionalText: null,
+    offer: {
+      kind: "unstructured",
+      raw: { prependText: "", values: [], appendText: "", displayText: "Member deal" },
+    },
+  };
 }
 
 describe("loadWatchlist / saveWatchlist", () => {
   it("round-trips a string array", () => {
     const store = new Map<string, string>();
     const storage = {
-      getItem: (k: string) => store.get(k) ?? null,
-      setItem: (k: string, v: string) => void store.set(k, v),
+      getItem: (key: string) => store.get(key) ?? null,
+      setItem: (key: string, value: string) => void store.set(key, value),
     };
     saveWatchlist(["1", "2"], storage);
     expect(loadWatchlist(storage)).toEqual(["1", "2"]);
@@ -36,30 +51,25 @@ describe("loadWatchlist / saveWatchlist", () => {
 });
 
 describe("normalizeItemNumber", () => {
-  it("accepts a trimmed digit string", () => {
-    expect(normalizeItemNumber("  123 ")).toBe("123");
-  });
-
-  it("rejects non-digit input", () => {
-    expect(normalizeItemNumber("")).toBeNull();
+  it("accepts a trimmed digit string and rejects other input", () => {
+    expect(normalizeItemNumber(" 123 ")).toBe("123");
     expect(normalizeItemNumber("12a")).toBeNull();
-    expect(normalizeItemNumber("-1")).toBeNull();
+    expect(normalizeItemNumber("")).toBeNull();
   });
 });
 
-describe("isDiscounted", () => {
-  it("is true only when listPrice is below price", () => {
-    expect(isDiscounted(product(10, 8))).toBe(true);
-    expect(isDiscounted(product(10, 10))).toBe(false);
-    expect(isDiscounted(product(10, 12))).toBe(false);
-    expect(isDiscounted(product(10, null))).toBe(false);
-    expect(isDiscounted(product(null, 8))).toBe(false);
+describe("Warehouse Savings watch status", () => {
+  it("activates warehouse-only and warehouse-and-online deals", () => {
+    const deals = [deal("1"), deal("2", "warehouse_online")];
+    expect(activeWatchlistItems(["1", "2", "3"], deals)).toEqual(["1", "2"]);
+    expect(countActiveWatchlistDeals(["1", "2", "3"], deals)).toBe(2);
   });
-});
 
-describe("countDiscounted", () => {
-  it("counts watchlist items that are discounted, ignoring missing", () => {
-    const map = products({ "1": product(10, 8), "2": product(10, 10), "3": product(10, 5) });
-    expect(countDiscounted(["1", "2", "3", "missing"], map)).toBe(2);
+  it("does not activate online-only or absent items", () => {
+    expect(activeWatchlistItems(["1", "2"], [deal("1", "online_only")])).toEqual([]);
+  });
+
+  it("counts each watched item once and accepts non-price campaign offers", () => {
+    expect(countActiveWatchlistDeals(["1", "1"], [deal("1"), deal("1")])).toBe(1);
   });
 });

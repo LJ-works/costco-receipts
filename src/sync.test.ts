@@ -2,11 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { MergedReceipt } from "./common/client";
 import { selectProductsToFetch } from "./sync";
 
-type TestOrder = Pick<MergedReceipt, "transactionDate" | "itemArray">;
+type TestOrder = Pick<MergedReceipt, "itemArray">;
 
-function order(transactionDate: string, itemNumbers: string[]): TestOrder {
+function order(itemNumbers: string[]): TestOrder {
   return {
-    transactionDate,
     itemArray: itemNumbers.map(
       (itemNumber) => ({ itemNumber }) as MergedReceipt["itemArray"][number],
     ),
@@ -14,45 +13,18 @@ function order(transactionDate: string, itemNumbers: string[]): TestOrder {
 }
 
 describe("selectProductsToFetch", () => {
-  const now = new Date("2026-07-09T12:00:00Z");
-
-  it("selects uncached products", () => {
-    expect(selectProductsToFetch([order("2026-05-01", ["1"])], new Set(), now)).toEqual(["1"]);
+  it("selects uncached product metadata", () => {
+    expect(selectProductsToFetch([order(["1", "2"])], new Set(["2"]))).toEqual(["1"]);
   });
 
-  it("does not select cached products older than recent window", () => {
-    expect(selectProductsToFetch([order("2026-05-01", ["1"])], new Set(["1"]), now)).toEqual([]);
+  it("does not refresh cached products for pricing", () => {
+    expect(selectProductsToFetch([order(["1"])], new Set(["1"]))).toEqual([]);
   });
 
-  it("selects cached products purchased within recent window", () => {
-    expect(selectProductsToFetch([order("2026-07-01", ["1"])], new Set(["1"]), now)).toEqual(["1"]);
-  });
-
-  it("deduplicates across orders", () => {
-    expect(
-      selectProductsToFetch(
-        [order("2026-07-01", ["1", "2"]), order("2026-06-01", ["1", "3"])],
-        new Set(["1"]),
-        now,
-      ).sort(),
-    ).toEqual(["1", "2", "3"]);
-  });
-
-  it("always selects watched items even when cached and not recent", () => {
-    expect(
-      selectProductsToFetch([order("2026-05-01", ["1"])], new Set(["1"]), now, 30, ["1"]),
-    ).toEqual(["1"]);
-  });
-
-  it("unions watched items with recent and uncached, deduplicated", () => {
-    expect(
-      selectProductsToFetch(
-        [order("2026-07-01", ["1"]), order("2026-05-01", ["2"])],
-        new Set(["1", "2"]),
-        now,
-        30,
-        ["2", "3"],
-      ).sort(),
-    ).toEqual(["1", "2", "3"]);
+  it("deduplicates uncached products across orders", () => {
+    expect(selectProductsToFetch([order(["1", "2"]), order(["1", "3"])], new Set(["2"]))).toEqual([
+      "1",
+      "3",
+    ]);
   });
 });
