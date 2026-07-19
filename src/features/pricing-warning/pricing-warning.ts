@@ -1,4 +1,5 @@
-import type { ProductDetail, ProductDetailMap } from "../../common/client";
+import { activeWatchedItemNumbers, buildWarehouseDealIndex } from "../../common/warehouse-deals";
+import type { WarehouseDeal } from "../../common/warehouse-savings";
 
 const WATCHLIST_KEY = "costco-userjs:price-watchlist";
 
@@ -30,14 +31,16 @@ export function normalizeItemNumber(input: string): string | null {
   return /^\d+$/.test(trimmed) ? trimmed : null;
 }
 
-/** A product is discounted when its current listPrice is below its regular price. */
-export function isDiscounted(product: Pick<ProductDetail, "price" | "listPrice">): boolean {
-  return product.listPrice !== null && product.price !== null && product.listPrice < product.price;
+export function activeWatchlistItems(
+  watchlist: readonly string[],
+  deals: readonly WarehouseDeal[],
+): string[] {
+  return activeWatchedItemNumbers(watchlist, buildWarehouseDealIndex(deals));
 }
 
-export function countDiscounted(watchlist: string[], products: ProductDetailMap): number {
-  return watchlist.filter((id) => {
-    const product = products[id];
-    return product !== undefined && isDiscounted(product);
-  }).length;
+export function countActiveWatchlistDeals(
+  watchlist: readonly string[],
+  deals: readonly WarehouseDeal[],
+): number {
+  return activeWatchlistItems(watchlist, deals).length;
 }

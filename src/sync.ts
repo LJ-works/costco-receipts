@@ -12,39 +12,19 @@ import {
   saveOrders,
   saveProducts,
 } from "./common/db";
-import { loadWatchlist } from "./features/pricing-warning/pricing-warning";
-
 const INITIAL_SYNC_YEARS = 5;
 
-/** Products to fetch = all uncached products plus recently purchased products whose prices need refreshing. */
+/** Fetch uncached product metadata used for names and images; prices are not refreshed here. */
 export function selectProductsToFetch(
-  orders: Pick<MergedReceipt, "transactionDate" | "itemArray">[],
+  orders: Pick<MergedReceipt, "itemArray">[],
   cached: Set<string>,
-  now: Date,
-  recentDays = 30,
-  watchlist: string[] = [],
 ): string[] {
-  const cutoff = new Date(now);
-  cutoff.setDate(cutoff.getDate() - recentDays);
-  const cutoffDate = cutoff.toISOString().slice(0, 10);
-
-  const all = new Set<string>();
-  const recent = new Set<string>();
-
+  const selected = new Set<string>();
   for (const order of orders) {
-    const isRecent = order.transactionDate >= cutoffDate;
     for (const item of order.itemArray) {
-      all.add(item.itemNumber);
-      if (isRecent) recent.add(item.itemNumber);
+      if (!cached.has(item.itemNumber)) selected.add(item.itemNumber);
     }
   }
-
-  const selected = new Set<string>(recent);
-  for (const itemNumber of all) {
-    if (!cached.has(itemNumber)) selected.add(itemNumber);
-  }
-  // Always refresh watched items so the badge and prices stay current.
-  for (const itemNumber of watchlist) selected.add(itemNumber);
   return [...selected];
 }
 
@@ -90,13 +70,13 @@ export async function syncOrdersAndProducts({
   await saveOrders(receipts);
   const allOrders = await loadAllOrders();
   const cached = await cachedProductNumbers();
-  const productsToFetch = selectProductsToFetch(allOrders, cached, now, 30, loadWatchlist());
+  const productsToFetch = selectProductsToFetch(allOrders, cached);
 
   const productDetails = await fetchBatchItemDetails({
     itemNumbers: productsToFetch,
     clientId,
     warehouseNumber,
-    onProgress: (done, total) => onProgress?.("Products", done, total),
+    onProgress: (done, total) => onProgress?.("Product metadata", done, total),
   });
   await saveProducts(productDetails);
   saveLastRetrieve(now);
