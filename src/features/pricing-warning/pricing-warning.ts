@@ -1,5 +1,4 @@
-import { activeWatchedItemNumbers, buildWarehouseDealIndex } from "../../common/warehouse-deals";
-import type { WarehouseDeal } from "../../common/warehouse-savings";
+import type { PricingLookup } from "../../common/current-pricing";
 
 const WATCHLIST_KEY = "costco-userjs:price-watchlist";
 
@@ -33,14 +32,19 @@ export function normalizeItemNumber(input: string): string | null {
 
 export function activeWatchlistItems(
   watchlist: readonly string[],
-  deals: readonly WarehouseDeal[],
+  pricing: PricingLookup,
 ): string[] {
-  return activeWatchedItemNumbers(watchlist, buildWarehouseDealIndex(deals));
+  return [...new Set(watchlist)].filter((itemNumber) => {
+    const resolution = pricing.resolve(itemNumber);
+    return (
+      resolution.source === "warehouse_savings" || resolution.source === "product_api_fallback"
+    );
+  });
 }
 
 export function countActiveWatchlistDeals(
   watchlist: readonly string[],
-  deals: readonly WarehouseDeal[],
+  pricing: PricingLookup,
 ): number {
-  return activeWatchlistItems(watchlist, deals).length;
+  return activeWatchlistItems(watchlist, pricing).length;
 }

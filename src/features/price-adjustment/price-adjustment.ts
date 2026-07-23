@@ -1,18 +1,20 @@
-import type { MergedReceipt, MergedReceiptItem } from "../../common/client";
-import {
-  buildWarehouseDealIndex,
-  selectExactWarehouseDeal,
-  type ExactWarehouseDeal,
-} from "../../common/warehouse-deals";
-import type { WarehouseDeal } from "../../common/warehouse-savings";
+import type { MergedReceipt, MergedReceiptItem, ProductDetail } from "../../common/client";
+import type { PricingLookup } from "../../common/current-pricing";
+import { selectExactWarehouseDeal, type ExactWarehouseDeal } from "../../common/warehouse-deals";
 
 export const PRICE_ADJUSTMENT_DAYS = 30;
 
-export type PriceCalculationMode = "exact_final" | "displayed_price" | "inferred_saving";
+export type PriceCalculationMode =
+  | "exact_final"
+  | "displayed_price"
+  | "inferred_saving"
+  | "product_api_fallback";
 
 export interface PriceAdjustmentItem {
   item: MergedReceiptItem;
-  deal: ExactWarehouseDeal;
+  source: "warehouse_savings" | "product_api_fallback";
+  deal: ExactWarehouseDeal | null;
+  fallbackProduct: ProductDetail | null;
   quantity: number;
   oldPrice: number;
   newPrice: number;
@@ -51,27 +53,51 @@ function mergeKey(item: MergedReceiptItem): string {
   return JSON.stringify([item.itemNumber, item.amount, item.discount, item.itemUnitPriceAmount]);
 }
 
-export function findPriceAdjustments(
-  orders: MergedReceipt[],
-  deals: readonly WarehouseDeal[],
+export function priceAdjustmentItemNumbers(
+  orders: readonly MergedReceipt[],
   now: Date,
   recentDays = PRICE_ADJUSTMENT_DAYS,
-): PriceAdjustmentOrder[] {
+): string[] {
   const cutoff = new Date(now);
   cutoff.setDate(cutoff.getDate() - recentDays);
   const cutoffDate = formatLocalDate(cutoff);
-  const dealIndex = buildWarehouseDealIndex(deals);
+  const result = new Set<string>();
+  for (const order of orders) {
+    if (order.transactionDate < cutoffDate || !isWarehouseSale(order)) continue;
+    for (const item of order.itemArray) {
+      if (!isWeightedItem(item)) result.add(item.itemNumber);
+    }
+  }
+  return [...result];
+}
+
+export function findPriceAdjustments(
+  orders: MergedReceipt[],
+  pricing: PricingLookup,
+  now: Date,
+  recentDays = PRICE_ADJUSTMENT_DAYS,
+): PriceAdjustmentOrder[] {
+  const eligibleNumbers = new Set(priceAdjustmentItemNumbers(orders, now, recentDays));
+  const cutoff = new Date(now);
+  cutoff.setDate(cutoff.getDate() - recentDays);
+  const cutoffDate = formatLocalDate(cutoff);
   const adjustments: PriceAdjustmentOrder[] = [];
 
   for (const order of orders) {
     if (order.transactionDate < cutoffDate || !isWarehouseSale(order)) continue;
+    if (!order.itemArray.some((item) => eligibleNumbers.has(item.itemNumber))) continue;
 
     const mergedItems = new Map<string, PriceAdjustmentItem>();
     for (const item of order.itemArray) {
-      if (isWeightedItem(item)) continue;
-      const deal = selectExactWarehouseDeal(dealIndex.get(item.itemNumber));
-      if (!deal) continue;
-      const adjustment = calculateAdjustment(item, deal);
+      if (!eligibleNumbers.has(item.itemNumber) || isWeightedItem(item)) continue;
+      const resolution = pricing.resolve(item.itemNumber);
+      let adjustment: PriceAdjustmentItem | null = null;
+      if (resolution.source === "warehouse_savings") {
+        const deal = selectExactWarehouseDeal(resolution.deals);
+        if (deal) adjustment = calculateWarehouseAdjustment(item, deal);
+      } else if (resolution.source === "product_api_fallback") {
+        adjustment = calculateProductApiAdjustment(item, resolution.product);
+      }
       if (!adjustment) continue;
 
       const key = mergeKey(item);
@@ -87,7 +113,7 @@ export function findPriceAdjustments(
   return adjustments.sort((a, b) => b.order.transactionDate.localeCompare(a.order.transactionDate));
 }
 
-function calculateAdjustment(
+function calculateWarehouseAdjustment(
   item: MergedReceiptItem,
   deal: ExactWarehouseDeal,
 ): PriceAdjustmentItem | null {
@@ -116,16 +142,67 @@ function calculateAdjustment(
   }
 
   if (newPriceCents >= oldPriceCents) return null;
+  return createAdjustment(item, oldPriceCents, newPriceCents, {
+    source: "warehouse_savings",
+    deal,
+    fallbackProduct: null,
+    campaignSavingCents,
+    calculationMode,
+    estimated,
+  });
+}
+
+function calculateProductApiAdjustment(
+  item: MergedReceiptItem,
+  product: ProductDetail,
+): PriceAdjustmentItem | null {
+  if (
+    product.price === null ||
+    product.listPrice === null ||
+    !Number.isFinite(product.price) ||
+    !Number.isFinite(product.listPrice) ||
+    product.listPrice >= product.price
+  ) {
+    return null;
+  }
+  const oldPriceCents = dollarsToCents(historicalItemPrice(item));
+  const newPriceCents = dollarsToCents(product.listPrice);
+  if (newPriceCents >= oldPriceCents) return null;
+  return createAdjustment(item, oldPriceCents, newPriceCents, {
+    source: "product_api_fallback",
+    deal: null,
+    fallbackProduct: product,
+    campaignSavingCents: dollarsToCents(product.price) - newPriceCents,
+    calculationMode: "product_api_fallback",
+    estimated: false,
+  });
+}
+
+function createAdjustment(
+  item: MergedReceiptItem,
+  oldPriceCents: number,
+  newPriceCents: number,
+  details: {
+    source: PriceAdjustmentItem["source"];
+    deal: ExactWarehouseDeal | null;
+    fallbackProduct: ProductDetail | null;
+    campaignSavingCents: number | null;
+    calculationMode: PriceCalculationMode;
+    estimated: boolean;
+  },
+): PriceAdjustmentItem {
   return {
     item,
-    deal,
+    source: details.source,
+    deal: details.deal,
+    fallbackProduct: details.fallbackProduct,
     quantity: 1,
     oldPrice: oldPriceCents / 100,
     newPrice: newPriceCents / 100,
     adjustment: (oldPriceCents - newPriceCents) / 100,
-    campaignSaving: campaignSavingCents === null ? null : campaignSavingCents / 100,
-    calculationMode,
-    estimated,
+    campaignSaving: details.campaignSavingCents === null ? null : details.campaignSavingCents / 100,
+    calculationMode: details.calculationMode,
+    estimated: details.estimated,
   };
 }
 

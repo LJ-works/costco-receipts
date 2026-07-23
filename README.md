@@ -1,6 +1,6 @@
 # Costco Order Assistant
 
-A userscript for costco.com that synchronizes orders locally, finds historical orders by product, checks whether recently purchased products match current Warehouse Savings offers, and warns when watched products appear in the active Warehouse Savings campaign. All local caches remain in your browser and are never uploaded to a third-party service.
+A userscript for costco.com that synchronizes orders locally, finds historical orders by product, checks whether recently purchased products match current deals, and warns when watched products go on sale. Warehouse Savings is preferred, with a targeted Product GraphQL fallback for tracked items missing from the page. All local caches remain in your browser and are never uploaded to a third-party service.
 
 ## Features
 
@@ -14,18 +14,18 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 ### 30-Day Price Adjustment
 
 - Find in-warehouse purchases from the last 30 days that may be eligible for a Costco price adjustment.
-- Compare purchases with warehouse-applicable offers published on Costco's Warehouse Savings page.
+- Prefer warehouse-applicable offers published on Costco's Warehouse Savings page; for products missing from that page, check a targeted Product GraphQL fallback.
 - Use exact campaign prices where available. For `Save $X` offers, estimate the new price from the receipt's gross price and compare the campaign saving with any discount already received.
-- Automatically skip refunds, weighted items, products absent from the current campaign, online-only offers, and ambiguous price ranges or incentives.
+- Automatically skip refunds, weighted items, ambiguous page offers, and products for which neither source provides a valid discount.
 - Group eligible items by order and clearly label saving-only calculations as estimates.
 
 ### Price Watch
 
 - Maintain a personal watchlist of up to 50 products to monitor for price drops, added and removed by item number.
 - Watched items appearing in the current warehouse-applicable Warehouse Savings campaign are highlighted and show the published offer text.
-- The feature button badge counts watched items in that campaign.
-- Items absent from the campaign remain on the watchlist for future promotions but are not marked as on sale.
-- Product API prices are not displayed as current warehouse deal prices.
+- For watched items absent from the page, a targeted Product GraphQL request checks for a strictly lower `listPrice` fallback.
+- The feature button badge counts active watched items from either source, without double-counting.
+- Items with no deal from either source remain on the watchlist for future promotions.
 
 ### Local Data Sync
 
@@ -33,15 +33,15 @@ When you click **Start**, the script incrementally synchronizes in-warehouse ord
 
 ## Pricing data source
 
-Warehouse deal decisions use Costco's customer-facing Warehouse Savings page, not the product GraphQL API's `price` or `listPrice`. During validation, 212 page deals were comparable with the product API, but 20 had different prices and 53 had unavailable API pricing. That error rate is not reliable enough for price-adjustment or sale-warning decisions.
+Warehouse deal decisions prefer Costco's customer-facing Warehouse Savings page. During validation, 212 page deals were comparable with the product API, but 20 had different prices and 53 had unavailable API pricing, so the API is not treated as the primary source.
 
-The product API may still supply descriptive metadata such as names and images, but its prices are not treated as authoritative and are never used as a fallback when Warehouse Savings is unavailable.
+For tracked items missing from the page—or when the page cannot be loaded—the script makes a targeted Product GraphQL fallback request. A fallback is accepted only when fresh `price` and `listPrice` values exist and `listPrice < price`. Existing warehouse-applicable page offers always take precedence, including ranges and incentives; the API never overrides them. The UI labels fallback results explicitly.
 
-Warehouse Savings also has limitations: it covers campaign items rather than the full catalog; prices may vary by location and in AK, HI, PR, Business Centers, and online; and some offers provide only a saving, range, or incentive. Items absent from the page are deliberately skipped. A `Save $X` price-adjustment estimate assumes the receipt's gross price remains the applicable base price.
+Warehouse Savings covers campaign items rather than the full catalog; prices may vary by location and in AK, HI, PR, Business Centers, and online. Some offers provide only a saving, range, or incentive. A `Save $X` price-adjustment estimate assumes the receipt's gross price remains the applicable base price.
 
 ## Usage
 
-Before using the script, sign in to [costco.com](https://www.costco.com/) and open **Account > Orders & Purchases** so the script can access your Costco session information. Use **Back** inside a feature to return to the feature picker; synchronized orders, product metadata, and the Warehouse Savings snapshot are reused without new network requests.
+Before using the script, sign in to [costco.com](https://www.costco.com/) and open **Account > Orders & Purchases** so the script can access your Costco session information. Use **Back** inside a feature to return to the feature picker; synchronized orders, product metadata, the Warehouse Savings snapshot, and attempted fallback requests are reused. Adding a previously unseen watched item may trigger one targeted fallback request.
 
 ### Desktop Browsers
 

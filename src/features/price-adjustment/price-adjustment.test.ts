@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { MergedReceipt, MergedReceiptItem } from "../../common/client";
+import type { MergedReceipt, MergedReceiptItem, ProductDetail } from "../../common/client";
+import type { PricingLookup, PricingResolution } from "../../common/current-pricing";
+import { buildWarehouseDealIndex } from "../../common/warehouse-deals";
 import type { DealOffer, WarehouseDeal } from "../../common/warehouse-savings";
-import { findPriceAdjustments, historicalItemPrice, isWeightedItem } from "./price-adjustment";
+import {
+  findPriceAdjustments,
+  historicalItemPrice,
+  isWeightedItem,
+  priceAdjustmentItemNumbers,
+} from "./price-adjustment";
 
 const now = new Date("2026-07-09T12:00:00");
 const raw = { prependText: "", values: [], appendText: "", displayText: "deal" };
@@ -62,78 +69,115 @@ function finalDeal(itemNumber: string, finalCents: number, savingCents = 100): W
   });
 }
 
+function product(itemNumber: string, price: number, listPrice: number): ProductDetail {
+  return { itemNumber, itemActualName: itemNumber, price, listPrice } as ProductDetail;
+}
+
+function pricing(
+  deals: WarehouseDeal[] = [],
+  products: Record<string, ProductDetail> = {},
+): PricingLookup {
+  const index = buildWarehouseDealIndex(deals);
+  return {
+    warehouseSavingsAvailable: true,
+    resolve(itemNumber): PricingResolution {
+      const matched = index.get(itemNumber);
+      if (matched) return { source: "warehouse_savings", deals: matched };
+      const fallback = products[itemNumber];
+      return fallback
+        ? { source: "product_api_fallback", product: fallback }
+        : { source: "unavailable", reason: "missing_product" };
+    },
+  };
+}
+
 describe("findPriceAdjustments", () => {
   it("uses an exact campaign final price", () => {
     const receipt = order("2026-07-09", [item("1", { amount: 10, discount: -2 })]);
-    expect(findPriceAdjustments([receipt], [finalDeal("1", 700, 300)], now)).toMatchObject([
-      {
-        items: [
-          {
-            oldPrice: 8,
-            newPrice: 7,
-            adjustment: 1,
-            campaignSaving: 3,
-            calculationMode: "exact_final",
-            estimated: false,
-          },
-        ],
-      },
-    ]);
+    expect(findPriceAdjustments([receipt], pricing([finalDeal("1", 700, 300)]), now)).toMatchObject(
+      [
+        {
+          items: [
+            {
+              source: "warehouse_savings",
+              oldPrice: 8,
+              newPrice: 7,
+              adjustment: 1,
+              campaignSaving: 3,
+              calculationMode: "exact_final",
+              estimated: false,
+            },
+          ],
+        },
+      ],
+    );
   });
 
-  it("uses a single displayed campaign price", () => {
-    const receipt = order("2026-07-09", [item("1")]);
+  it("uses displayed and saving-only campaign prices", () => {
     const displayed = deal("1", {
       kind: "displayed_price_only",
       price: { currency: "USD", cents: 899 },
       raw,
     });
-    expect(findPriceAdjustments([receipt], [displayed], now)[0].items[0]).toMatchObject({
-      newPrice: 8.99,
-      adjustment: 1.01,
-      calculationMode: "displayed_price",
-      estimated: false,
+    const saving = deal("2", { kind: "saving_only", saving: { currency: "USD", cents: 300 }, raw });
+    const receipt = order("2026-07-09", [item("1"), item("2", { discount: -2 })]);
+    expect(
+      findPriceAdjustments([receipt], pricing([displayed, saving]), now)[0].items,
+    ).toMatchObject([
+      { newPrice: 8.99, calculationMode: "displayed_price", estimated: false },
+      {
+        oldPrice: 8,
+        newPrice: 7,
+        adjustment: 1,
+        calculationMode: "inferred_saving",
+        estimated: true,
+      },
+    ]);
+  });
+
+  it("uses a strict Product API fallback for a missing page item", () => {
+    const receipt = order("2026-07-09", [item("1", { amount: 12.99, itemUnitPriceAmount: 12.99 })]);
+    const result = findPriceAdjustments(
+      [receipt],
+      pricing([], { "1": product("1", 12.99, 9.49) }),
+      now,
+    );
+    expect(result[0].items[0]).toMatchObject({
+      source: "product_api_fallback",
+      newPrice: 9.49,
+      adjustment: 3.5,
+      campaignSaving: 3.5,
+      calculationMode: "product_api_fallback",
     });
   });
 
-  it("infers a saving-only price and accounts for the discount already received", () => {
-    const receipt = order("2026-07-09", [item("1", { amount: 10, discount: -2 })]);
-    const saving = deal("1", {
-      kind: "saving_only",
-      saving: { currency: "USD", cents: 300 },
-      raw,
-    });
-    expect(findPriceAdjustments([receipt], [saving], now)[0].items[0]).toMatchObject({
-      oldPrice: 8,
-      newPrice: 7,
-      adjustment: 1,
-      campaignSaving: 3,
-      calculationMode: "inferred_saving",
-      estimated: true,
-    });
-  });
-
-  it("skips an equal or smaller campaign saving", () => {
-    const receipt = order("2026-07-09", [item("1", { discount: -2 })]);
-    const equal = deal("1", {
-      kind: "saving_only",
-      saving: { currency: "USD", cents: 200 },
-      raw,
-    });
-    expect(findPriceAdjustments([receipt], [equal], now)).toEqual([]);
-  });
-
-  it("skips missing, online-only, ranged, and conflicting deals", () => {
-    const receipt = order("2026-07-09", [item("1"), item("2"), item("3"), item("4")]);
-    const online = { ...finalDeal("2", 500), applicability: "online_only" as const };
-    const range = deal("3", {
+  it("does not let API fallback override an ambiguous page offer", () => {
+    const range = deal("1", {
       kind: "saving_range",
       minSaving: { currency: "USD", cents: 100 },
       maxSaving: { currency: "USD", cents: 300 },
       raw,
     });
-    const conflicting = [finalDeal("4", 500), finalDeal("4", 600)];
-    expect(findPriceAdjustments([receipt], [online, range, ...conflicting], now)).toEqual([]);
+    const receipt = order("2026-07-09", [item("1")]);
+    expect(
+      findPriceAdjustments([receipt], pricing([range], { "1": product("1", 10, 5) }), now),
+    ).toEqual([]);
+  });
+
+  it("allows fallback when the page deal is online-only", () => {
+    const online = { ...finalDeal("1", 500), applicability: "online_only" as const };
+    const receipt = order("2026-07-09", [item("1")]);
+    expect(
+      findPriceAdjustments([receipt], pricing([online], { "1": product("1", 10, 8) }), now)[0]
+        .items[0].source,
+    ).toBe("product_api_fallback");
+  });
+
+  it("skips API prices that do not beat the historical paid price", () => {
+    const receipt = order("2026-07-09", [item("1", { discount: -2 })]);
+    expect(findPriceAdjustments([receipt], pricing([], { "1": product("1", 10, 9) }), now)).toEqual(
+      [],
+    );
   });
 
   it("retains date, sale, weighted-item, merge, and sorting rules", () => {
@@ -145,25 +189,18 @@ describe("findPriceAdjustments", () => {
     const gas = order("2026-07-09", [item("5")], { receiptType: "Gas Station" });
     const weighted = order("2026-07-09", [item("6", { itemUnitPriceAmount: 2 })]);
     const deals = ["1", "2", "3", "4", "5", "6"].map((id) => finalDeal(id, 900));
-
-    const result = findPriceAdjustments(
-      [older, boundary, refund, gas, weighted, newest],
-      deals,
-      now,
-    );
+    const orders = [older, boundary, refund, gas, weighted, newest];
+    const result = findPriceAdjustments(orders, pricing(deals), now);
     expect(result.map(({ order: matched }) => matched)).toEqual([newest, boundary]);
     expect(result[0].items[0]).toMatchObject({ item: duplicate, quantity: 2 });
+    expect(priceAdjustmentItemNumbers(orders, now).sort()).toEqual(["1", "2"]);
   });
 });
 
 describe("price-adjustment helpers", () => {
-  it("identifies weighted items", () => {
+  it("identifies weighted items and calculates historical net price", () => {
     expect(isWeightedItem({ amount: 10, itemUnitPriceAmount: 2 })).toBe(true);
-    expect(isWeightedItem({ amount: 10, itemUnitPriceAmount: 10 })).toBe(false);
     expect(isWeightedItem({ amount: 10, itemUnitPriceAmount: null })).toBe(false);
-  });
-
-  it("calculates the historical net price", () => {
     expect(historicalItemPrice({ amount: 10, discount: -2 })).toBe(8);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { WarehouseDeal } from "../../common/warehouse-savings";
+import type { PricingLookup, PricingResolution } from "../../common/current-pricing";
 import {
   activeWatchlistItems,
   countActiveWatchlistDeals,
@@ -8,26 +8,11 @@ import {
   saveWatchlist,
 } from "./pricing-warning";
 
-function deal(
-  itemNumber: string,
-  applicability: WarehouseDeal["applicability"] = "warehouse_only",
-): WarehouseDeal {
+function pricing(resolutions: Record<string, PricingResolution>): PricingLookup {
   return {
-    category: "Grocery",
-    title: `Item ${itemNumber}`,
-    itemNumber,
-    productId: null,
-    couponType: "item",
-    applicability,
-    url: null,
-    imageUrl: null,
-    offerDetails: null,
-    offerTerms: null,
-    additionalText: null,
-    offer: {
-      kind: "unstructured",
-      raw: { prependText: "", values: [], appendText: "", displayText: "Member deal" },
-    },
+    warehouseSavingsAvailable: true,
+    resolve: (itemNumber) =>
+      resolutions[itemNumber] ?? { source: "unavailable", reason: "missing_product" },
   };
 }
 
@@ -58,18 +43,22 @@ describe("normalizeItemNumber", () => {
   });
 });
 
-describe("Warehouse Savings watch status", () => {
-  it("activates warehouse-only and warehouse-and-online deals", () => {
-    const deals = [deal("1"), deal("2", "warehouse_online")];
-    expect(activeWatchlistItems(["1", "2", "3"], deals)).toEqual(["1", "2"]);
-    expect(countActiveWatchlistDeals(["1", "2", "3"], deals)).toBe(2);
+describe("current deal watch status", () => {
+  const warehouse: PricingResolution = { source: "warehouse_savings", deals: [] };
+  const fallback: PricingResolution = {
+    source: "product_api_fallback",
+    product: { itemNumber: "2", price: 10, listPrice: 8 } as never,
+  };
+
+  it("activates Warehouse Savings and Product API fallback deals", () => {
+    const lookup = pricing({ "1": warehouse, "2": fallback });
+    expect(activeWatchlistItems(["1", "2", "3"], lookup)).toEqual(["1", "2"]);
+    expect(countActiveWatchlistDeals(["1", "2", "3"], lookup)).toBe(2);
   });
 
-  it("does not activate online-only or absent items", () => {
-    expect(activeWatchlistItems(["1", "2"], [deal("1", "online_only")])).toEqual([]);
-  });
-
-  it("counts each watched item once and accepts non-price campaign offers", () => {
-    expect(countActiveWatchlistDeals(["1", "1"], [deal("1"), deal("1")])).toBe(1);
+  it("keeps unavailable items inactive and counts duplicate watches once", () => {
+    const lookup = pricing({ "1": warehouse });
+    expect(activeWatchlistItems(["1", "1", "2"], lookup)).toEqual(["1"]);
+    expect(countActiveWatchlistDeals(["1", "1", "2"], lookup)).toBe(1);
   });
 });
