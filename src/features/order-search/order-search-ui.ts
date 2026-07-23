@@ -57,7 +57,7 @@ export async function showOrderSearchUi(): Promise<void> {
   topRow.style.cssText = "display:flex;align-items:center;gap:8px;margin-bottom:10px;";
 
   const backButton = document.createElement("button");
-  backButton.textContent = "Back";
+  backButton.textContent = "Search Results";
   backButton.style.cssText =
     "display:none;padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
