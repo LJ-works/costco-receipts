@@ -41,7 +41,7 @@ Warehouse Savings also has limitations: it covers campaign items rather than the
 
 ## Usage
 
-Before using the script, sign in to [costco.com](https://www.costco.com/) and open **Account > Orders & Purchases** so the script can access your Costco session information.
+Before using the script, sign in to [costco.com](https://www.costco.com/) and open **Account > Orders & Purchases** so the script can access your Costco session information. Use **Back** inside a feature to return to the feature picker; synchronized orders, product metadata, and the Warehouse Savings snapshot are reused without new network requests.
 
 ### Desktop Browsers
 
