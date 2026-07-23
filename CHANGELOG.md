@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.5.0...costco-userjs-v1.6.0) (2026-07-23)
+
+
+### Features
+
+* add order items to price watch ([#26](https://github.com/LJ-works/costco-receipts/issues/26)) ([86bd9fc](https://github.com/LJ-works/costco-receipts/commit/86bd9fca2eb6409bad79eac94a5f0a34b536d98c))
+* add product API pricing fallback ([#24](https://github.com/LJ-works/costco-receipts/issues/24)) ([1c417ea](https://github.com/LJ-works/costco-receipts/commit/1c417eae4e7d9b847353d406c8d546379b94474c))
+* return to feature picker from features ([#22](https://github.com/LJ-works/costco-receipts/issues/22)) ([3b0eac5](https://github.com/LJ-works/costco-receipts/commit/3b0eac5b1aeffd4c9d1d196256a409dba046dda1))
+
+
+### Bug Fixes
+
+* clarify order search navigation ([#25](https://github.com/LJ-works/costco-receipts/issues/25)) ([890f2fe](https://github.com/LJ-works/costco-receipts/commit/890f2fef4bfe2146548c979986356dc890fbcb68))
+
 ## [1.5.0](https://github.com/LJ-works/costco-receipts/compare/costco-userjs-v1.4.0...costco-userjs-v1.5.0) (2026-07-19)
 
 
