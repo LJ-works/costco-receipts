@@ -118,13 +118,18 @@ async function run(): Promise<void> {
       return null;
     });
     const warehouseDeals = warehouseSavings?.deals ?? null;
-    const discountedCount = warehouseDeals
-      ? countActiveWatchlistDeals(loadWatchlist(), warehouseDeals)
-      : 0;
-    const feature = await showFeaturePicker({ "pricing-warning": discountedCount });
-    if (feature === "find-order") await showOrderSearchUi();
-    if (feature === "price-adjustment") await showPriceAdjustmentUi({ warehouseDeals });
-    if (feature === "pricing-warning") await showPricingWarningUi({ warehouseDeals });
+
+    // Reuse the synchronized orders, product metadata, and Warehouse Savings snapshot while
+    // navigating between features. Only the watchlist badge is recalculated after returning.
+    while (true) {
+      const discountedCount = warehouseDeals
+        ? countActiveWatchlistDeals(loadWatchlist(), warehouseDeals)
+        : 0;
+      const feature = await showFeaturePicker({ "pricing-warning": discountedCount });
+      if (feature === "find-order") await showOrderSearchUi();
+      if (feature === "price-adjustment") await showPriceAdjustmentUi({ warehouseDeals });
+      if (feature === "pricing-warning") await showPricingWarningUi({ warehouseDeals });
+    }
   } catch (err) {
     console.error("Failed to retrieve orders or load the cache", err);
     alert(
@@ -136,13 +141,24 @@ async function run(): Promise<void> {
 // Use a plain DOM button instead of GM_registerMenuCommand or @run-at context-menu because
 // quoid/userscripts on iOS Safari supports neither; the button works across extensions.
 function addTriggerButton(): void {
+  let running = false;
   const button = document.createElement("button");
   button.textContent = "Start";
   button.style.cssText =
     "position:fixed;bottom:16px;right:16px;z-index:2147483647;padding:8px 14px;" +
     "background:#005dab;color:#fff;border:none;border-radius:4px;cursor:pointer;" +
     "font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.3);";
-  button.addEventListener("click", run);
+  button.addEventListener("click", async () => {
+    if (running) return;
+    running = true;
+    button.disabled = true;
+    try {
+      await run();
+    } finally {
+      running = false;
+      button.disabled = false;
+    }
+  });
   document.body.appendChild(button);
 }
 

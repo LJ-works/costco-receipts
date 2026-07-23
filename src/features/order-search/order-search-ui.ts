@@ -66,9 +66,9 @@ export async function showOrderSearchUi(): Promise<void> {
   title.textContent = "Find Orders";
   title.style.cssText = "flex:1;font-size:18px;font-weight:bold;";
 
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "Close";
-  closeButton.style.cssText =
+  const featureBackButton = document.createElement("button");
+  featureBackButton.textContent = "Back";
+  featureBackButton.style.cssText =
     "padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
 
@@ -83,14 +83,10 @@ export async function showOrderSearchUi(): Promise<void> {
   const content = document.createElement("div");
   content.style.cssText = "flex:1;overflow:auto;padding:14px;";
 
-  topRow.append(backButton, title, closeButton);
+  topRow.append(backButton, title, featureBackButton);
   header.append(topRow, input);
   overlay.append(header, content);
   document.body.appendChild(overlay);
-
-  function close(): void {
-    overlay.remove();
-  }
 
   function showMessage(message: string): void {
     const empty = document.createElement("div");
@@ -164,10 +160,20 @@ export async function showOrderSearchUi(): Promise<void> {
     );
   }
 
-  closeButton.addEventListener("click", close);
   backButton.addEventListener("click", renderResults);
   input.addEventListener("input", renderResults);
 
   renderResults();
   input.focus();
+
+  await new Promise<void>((resolve) => {
+    featureBackButton.addEventListener(
+      "click",
+      () => {
+        overlay.remove();
+        resolve();
+      },
+      { once: true },
+    );
+  });
 }

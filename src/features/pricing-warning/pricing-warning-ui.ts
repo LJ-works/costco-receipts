@@ -29,9 +29,9 @@ export async function showPricingWarningUi(options: {
   const title = document.createElement("div");
   title.textContent = "Price Watch";
   title.style.cssText = "flex:1;font-size:18px;font-weight:bold;";
-  const closeButton = document.createElement("button");
-  closeButton.textContent = "Close";
-  closeButton.style.cssText =
+  const backButton = document.createElement("button");
+  backButton.textContent = "Back";
+  backButton.style.cssText =
     "padding:8px 10px;background:#f3f4f6;border:1px solid #d1d5db;" +
     "border-radius:6px;font-size:14px;cursor:pointer;";
 
@@ -54,7 +54,7 @@ export async function showPricingWarningUi(options: {
   content.style.cssText = "flex:1;overflow:auto;padding:14px;";
 
   inputRow.append(input, addButton);
-  topRow.append(title, closeButton);
+  topRow.append(title, backButton);
   header.append(topRow, inputRow);
   overlay.append(header, content);
   document.body.appendChild(overlay);
@@ -142,11 +142,21 @@ export async function showPricingWarningUi(options: {
     renderList();
   }
 
-  closeButton.addEventListener("click", () => overlay.remove());
   addButton.addEventListener("click", addItem);
   input.addEventListener("keydown", (event) => {
     if (event.key === "Enter") addItem();
   });
   renderList();
   input.focus();
+
+  await new Promise<void>((resolve) => {
+    backButton.addEventListener(
+      "click",
+      () => {
+        overlay.remove();
+        resolve();
+      },
+      { once: true },
+    );
+  });
 }
