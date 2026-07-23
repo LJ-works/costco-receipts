@@ -1,6 +1,7 @@
 import type { CurrentPricingContext, PricingResolution } from "../../common/current-pricing";
 import { loadAllProducts } from "../../common/db";
 import {
+  addWatchlistItem,
   loadWatchlist,
   MAX_WATCHLIST,
   normalizeItemNumber,
@@ -127,15 +128,16 @@ export async function showPricingWarningUi(options: {
   async function addItem(): Promise<void> {
     const id = normalizeItemNumber(input.value);
     if (!id) return;
-    if (watchlist.includes(id)) {
+    const result = addWatchlistItem(watchlist, id);
+    if (result.status === "already_watching") {
       input.value = "";
       return;
     }
-    if (watchlist.length >= MAX_WATCHLIST) {
+    if (result.status === "limit_reached") {
       alert(`You can watch at most ${MAX_WATCHLIST} items.`);
       return;
     }
-    watchlist = [...watchlist, id];
+    watchlist = result.watchlist;
     saveWatchlist(watchlist);
     input.value = "";
     addButton.disabled = true;

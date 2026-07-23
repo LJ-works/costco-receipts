@@ -2,6 +2,7 @@ import type { ProductDetailMap } from "../../common/client";
 import { loadAllOrders, loadAllProducts } from "../../common/db";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
+import { addWatchlistItem, loadWatchlist, saveWatchlist } from "../pricing-warning/pricing-warning";
 import {
   searchOrdersByProductText,
   splitHighlightSegments,
@@ -42,6 +43,7 @@ function appendHighlightedText(element: HTMLElement, text: string, query: string
 
 export async function showOrderSearchUi(): Promise<void> {
   const [orders, products] = await Promise.all([loadAllOrders(), loadAllProducts()]);
+  let watchlist = loadWatchlist();
 
   const overlay = document.createElement("div");
   overlay.style.cssText =
@@ -156,7 +158,17 @@ export async function showOrderSearchUi(): Promise<void> {
     input.style.display = "none";
 
     content.replaceChildren(
-      createOrderDetail(match.order, products, new Set(match.matchedItemNumbers)),
+      createOrderDetail(match.order, products, new Set(match.matchedItemNumbers), {
+        isWatching: (itemNumber) => watchlist.includes(itemNumber),
+        onWatchItem: (itemNumber) => {
+          const result = addWatchlistItem(watchlist, itemNumber);
+          if (result.status === "added") {
+            watchlist = result.watchlist;
+            saveWatchlist(watchlist);
+          }
+          return result.status;
+        },
+      }),
     );
   }
 

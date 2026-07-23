@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { PricingLookup, PricingResolution } from "../../common/current-pricing";
 import {
   activeWatchlistItems,
+  addWatchlistItem,
   countActiveWatchlistDeals,
   loadWatchlist,
   normalizeItemNumber,
@@ -32,6 +33,35 @@ describe("loadWatchlist / saveWatchlist", () => {
     expect(loadWatchlist({ getItem: () => "not json" })).toEqual([]);
     expect(loadWatchlist({ getItem: () => JSON.stringify({ nope: true }) })).toEqual([]);
     expect(loadWatchlist({ getItem: () => JSON.stringify(["1", 2, null]) })).toEqual(["1"]);
+  });
+});
+
+describe("addWatchlistItem", () => {
+  it("adds a new item without mutating the original list", () => {
+    const original = ["1"];
+    expect(addWatchlistItem(original, "2")).toEqual({
+      status: "added",
+      watchlist: ["1", "2"],
+    });
+    expect(original).toEqual(["1"]);
+  });
+
+  it("keeps an existing item unchanged", () => {
+    expect(addWatchlistItem(["1", "2"], "2")).toEqual({
+      status: "already_watching",
+      watchlist: ["1", "2"],
+    });
+  });
+
+  it("allows the fiftieth item and rejects the fifty-first", () => {
+    const first49 = Array.from({ length: 49 }, (_, index) => String(index + 1));
+    const full = addWatchlistItem(first49, "50");
+    expect(full.status).toBe("added");
+    expect(full.watchlist).toHaveLength(50);
+    expect(addWatchlistItem(full.watchlist, "51")).toEqual({
+      status: "limit_reached",
+      watchlist: full.watchlist,
+    });
   });
 });
 

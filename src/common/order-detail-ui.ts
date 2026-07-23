@@ -17,10 +17,18 @@ function itemQuantityText(item: MergedReceiptItem): string | null {
   return `Quantity: ${item.unit}`;
 }
 
+export type WatchItemActionResult = "added" | "already_watching" | "limit_reached";
+
+export interface OrderDetailOptions {
+  isWatching?: (itemNumber: string) => boolean;
+  onWatchItem?: (itemNumber: string) => WatchItemActionResult;
+}
+
 export function createOrderDetail(
   order: MergedReceipt,
   products: ProductDetailMap,
   highlightedItemNumbers: ReadonlySet<string> = new Set(),
+  options: OrderDetailOptions = {},
 ): HTMLElement {
   const container = document.createElement("div");
   container.style.cssText = "display:flex;flex-direction:column;gap:12px;";
@@ -39,6 +47,18 @@ export function createOrderDetail(
 
   summary.append(summaryTitle, warehouse);
   container.appendChild(summary);
+
+  const watchButtons = new Map<string, HTMLButtonElement[]>();
+
+  function setWatching(itemNumber: string): void {
+    for (const button of watchButtons.get(itemNumber) ?? []) {
+      button.textContent = "Watching";
+      button.disabled = true;
+      button.style.background = "#e5e7eb";
+      button.style.color = "#4b5563";
+      button.style.cursor = "default";
+    }
+  }
 
   for (const orderItem of order.itemArray) {
     const row = document.createElement("div");
@@ -62,6 +82,33 @@ export function createOrderDetail(
     meta.style.cssText = "font-size:13px;color:#374151;line-height:1.4;";
 
     row.append(name, productId, meta);
+
+    if (options.onWatchItem && /^\d+$/.test(orderItem.itemNumber)) {
+      const watchButton = document.createElement("button");
+      watchButton.type = "button";
+      watchButton.textContent = "Add to Price Watch";
+      watchButton.style.cssText =
+        "margin-top:10px;padding:7px 10px;background:#005dab;color:#fff;border:none;" +
+        "border-radius:6px;font-size:13px;cursor:pointer;";
+      const buttons = watchButtons.get(orderItem.itemNumber) ?? [];
+      buttons.push(watchButton);
+      watchButtons.set(orderItem.itemNumber, buttons);
+
+      if (options.isWatching?.(orderItem.itemNumber)) {
+        setWatching(orderItem.itemNumber);
+      } else {
+        watchButton.addEventListener("click", () => {
+          const result = options.onWatchItem?.(orderItem.itemNumber);
+          if (result === "added" || result === "already_watching") {
+            setWatching(orderItem.itemNumber);
+          } else if (result === "limit_reached") {
+            alert("You can watch at most 50 items.");
+          }
+        });
+      }
+      row.appendChild(watchButton);
+    }
+
     container.appendChild(row);
   }
 

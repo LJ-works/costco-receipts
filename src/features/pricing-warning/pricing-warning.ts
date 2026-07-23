@@ -24,6 +24,26 @@ export function saveWatchlist(
   storage.setItem(WATCHLIST_KEY, JSON.stringify(ids));
 }
 
+export type AddWatchlistStatus = "added" | "already_watching" | "limit_reached";
+
+export interface AddWatchlistResult {
+  status: AddWatchlistStatus;
+  watchlist: string[];
+}
+
+export function addWatchlistItem(
+  watchlist: readonly string[],
+  itemNumber: string,
+): AddWatchlistResult {
+  if (watchlist.includes(itemNumber)) {
+    return { status: "already_watching", watchlist: [...watchlist] };
+  }
+  if (watchlist.length >= MAX_WATCHLIST) {
+    return { status: "limit_reached", watchlist: [...watchlist] };
+  }
+  return { status: "added", watchlist: [...watchlist, itemNumber] };
+}
+
 /** Trim and accept only a plain digit string; otherwise null. */
 export function normalizeItemNumber(input: string): string | null {
   const trimmed = input.trim();
