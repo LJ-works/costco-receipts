@@ -1,4 +1,5 @@
 import { fetchReceiptsByDateRange } from "./common/client";
+import { CurrentPricingContext } from "./common/current-pricing";
 import { showProgress } from "./common/progress";
 import { fetchWarehouseSavings } from "./common/warehouse-savings-client";
 import {
@@ -117,18 +118,20 @@ async function run(): Promise<void> {
       console.error("Failed to load Warehouse Savings", error);
       return null;
     });
-    const warehouseDeals = warehouseSavings?.deals ?? null;
+    const pricing = new CurrentPricingContext(warehouseSavings?.deals ?? null, {
+      clientId,
+      warehouseNumber,
+    });
 
-    // Reuse the synchronized orders, product metadata, and Warehouse Savings snapshot while
-    // navigating between features. Only the watchlist badge is recalculated after returning.
+    // Reuse orders, metadata, Warehouse Savings, and attempted API fallbacks while navigating.
     while (true) {
-      const discountedCount = warehouseDeals
-        ? countActiveWatchlistDeals(loadWatchlist(), warehouseDeals)
-        : 0;
+      const watchlist = loadWatchlist();
+      await pricing.ensureFallback(watchlist);
+      const discountedCount = countActiveWatchlistDeals(watchlist, pricing);
       const feature = await showFeaturePicker({ "pricing-warning": discountedCount });
       if (feature === "find-order") await showOrderSearchUi();
-      if (feature === "price-adjustment") await showPriceAdjustmentUi({ warehouseDeals });
-      if (feature === "pricing-warning") await showPricingWarningUi({ warehouseDeals });
+      if (feature === "price-adjustment") await showPriceAdjustmentUi({ pricing });
+      if (feature === "pricing-warning") await showPricingWarningUi({ pricing });
     }
   } catch (err) {
     console.error("Failed to retrieve orders or load the cache", err);

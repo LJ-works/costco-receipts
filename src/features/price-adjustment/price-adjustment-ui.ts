@@ -1,20 +1,21 @@
+import type { CurrentPricingContext } from "../../common/current-pricing";
 import { loadAllOrders, loadAllProducts } from "../../common/db";
-import type { WarehouseDeal } from "../../common/warehouse-savings";
 import { createOrderDetail, displayOrderItemName } from "../../common/order-detail-ui";
 import { formatMoney } from "../../common/order";
 import {
   PRICE_ADJUSTMENT_DAYS,
   findPriceAdjustments,
+  priceAdjustmentItemNumbers,
   type PriceAdjustmentOrder,
 } from "./price-adjustment";
 
 export async function showPriceAdjustmentUi(options: {
-  warehouseDeals: readonly WarehouseDeal[] | null;
+  pricing: CurrentPricingContext;
 }): Promise<void> {
   const [orders, products] = await Promise.all([loadAllOrders(), loadAllProducts()]);
-  const adjustments = options.warehouseDeals
-    ? findPriceAdjustments(orders, options.warehouseDeals, new Date(), PRICE_ADJUSTMENT_DAYS)
-    : [];
+  const now = new Date();
+  await options.pricing.ensureFallback(priceAdjustmentItemNumbers(orders, now));
+  const adjustments = findPriceAdjustments(orders, options.pricing, now, PRICE_ADJUSTMENT_DAYS);
 
   const overlay = document.createElement("div");
   overlay.style.cssText =
@@ -56,21 +57,21 @@ export async function showPriceAdjustmentUi(options: {
   function renderResults(): void {
     title.textContent = "30-Day Price Adjustment";
     backButton.style.display = "none";
+    content.replaceChildren();
 
-    if (!options.warehouseDeals) {
-      const unavailable = document.createElement("div");
-      unavailable.textContent =
-        "Warehouse Savings is unavailable. No product API price fallback is used.";
-      unavailable.style.cssText = "padding:24px 8px;color:#92400e;text-align:center;";
-      content.replaceChildren(unavailable);
-      return;
+    if (!options.pricing.warehouseSavingsAvailable) {
+      const warning = document.createElement("div");
+      warning.textContent =
+        "Warehouse Savings could not be loaded. Product API fallback results are shown when available.";
+      warning.style.cssText = "padding:12px;margin-bottom:12px;background:#fffbeb;color:#92400e;";
+      content.appendChild(warning);
     }
 
     if (adjustments.length === 0) {
       const empty = document.createElement("div");
       empty.textContent = `No eligible price adjustments were found in the last ${PRICE_ADJUSTMENT_DAYS} days.`;
       empty.style.cssText = "padding:24px 8px;color:#6b7280;text-align:center;";
-      content.replaceChildren(empty);
+      content.appendChild(empty);
       return;
     }
 
@@ -81,7 +82,7 @@ export async function showPriceAdjustmentUi(options: {
       list.appendChild(createOrderAdjustmentGroup(adjustment));
     }
 
-    content.replaceChildren(list);
+    content.appendChild(list);
   }
 
   function createOrderAdjustmentGroup(adjustment: PriceAdjustmentOrder): HTMLElement {
@@ -120,7 +121,10 @@ export async function showPriceAdjustmentUi(options: {
         "font-size:14px;font-weight:bold;color:#005dab;line-height:1.5;";
 
       const offer = document.createElement("div");
-      offer.textContent = `Warehouse Savings: ${adjustedItem.deal.offer.raw.displayText}`;
+      offer.textContent =
+        adjustedItem.source === "warehouse_savings"
+          ? `Warehouse Savings: ${adjustedItem.deal?.offer.raw.displayText ?? ""}`
+          : `Product API fallback: regular ${formatMoney(adjustedItem.fallbackProduct?.price ?? 0)} | list ${formatMoney(adjustedItem.fallbackProduct?.listPrice ?? 0)}`;
       offer.style.cssText = "font-size:13px;color:#374151;line-height:1.5;";
 
       button.append(name, id, orderPrice, adjustmentPrice, offer);
