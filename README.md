@@ -10,6 +10,7 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 - Product names support case-insensitive, partial keyword matching. For example, `dar chi` matches `Dark Baking Chip`.
 - Results are sorted from newest to oldest.
 - View every item in an order, including item numbers, historical purchase prices, and discounts.
+- Add any product from an order's detail view directly to Price Watch.
 
 ### 30-Day Price Adjustment
 
@@ -21,7 +22,7 @@ A userscript for costco.com that synchronizes orders locally, finds historical o
 
 ### Price Watch
 
-- Maintain a personal watchlist of up to 50 products to monitor for price drops, added and removed by item number.
+- Maintain a personal watchlist of up to 50 products to monitor for price drops, added by item number or directly from Find Orders.
 - Watched items appearing in the current warehouse-applicable Warehouse Savings campaign are highlighted and show the published offer text.
 - For watched items absent from the page, a targeted Product GraphQL request checks for a strictly lower `listPrice` fallback.
 - The feature button badge counts active watched items from either source, without double-counting.
